@@ -23,11 +23,11 @@ in
 
   xdg.configFile =
     let
-      dir = "/home/kit/.dotfiles/home/kit/features/desktop/wayland-wm/albert";
+      dir = "/home/kit/nix-config/home/kit/features/desktop/wayland-wm/albert";
     in
     mkIf cfg.wayland.enable {
       # out of store while still in the learning phase
-      "albert/config.toml".source = config.lib.file.mkOutOfStoreSymlink "${dir}/config.toml";
+      "albert/config".source = config.lib.file.mkOutOfStoreSymlink "${dir}/config.toml";
       "albert/websearch/engines.json".source =
         config.lib.file.mkOutOfStoreSymlink "${dir}/websearch-engines.json";
     };

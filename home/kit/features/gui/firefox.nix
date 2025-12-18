@@ -51,20 +51,21 @@ in
       isDefault = true;
       search = {
         force = true;
-        default = "SearxNG";
+        default = "google";
+        # default = "SearxNG";
         privateDefault = "SearxNG";
         engines = {
-          "SearxNG" = {
-            urls = [
-              {
-                template =
-                  cfg.firefox.searxngInstance.url
-                  + ":"
-                  + (toString cfg.firefox.searxngInstance.port)
-                  + "/search?q={searchTerms}&categories=general";
-              }
-            ];
-          };
+          # "SearxNG" = {
+          #   urls = [
+          #     {
+          #       template =
+          #         cfg.firefox.searxngInstance.url
+          #         + ":"
+          #         + (toString cfg.firefox.searxngInstance.port)
+          #         + "/search?q={searchTerms}&categories=general";
+          #     }
+          #   ];
+          # };
           "MyNixOS" = {
             urls = [ { template = "https://mynixos.com/search?q={searchTerms}"; } ];
             definedAliases = [ "@nix" ];

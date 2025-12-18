@@ -357,60 +357,68 @@ in
     # x y z -> top, horizontal, bottom
     # w x y z -> top, right, bottom, left
 
-    style = builtins.readFile ./style.css;
+    # style = builtins.readFile ./style.css;
+    #
+    # xdg.configFile =
+    #     let
+    #         dir = "/home/kit/nix-config/home/kit/features/desktop/wayland-wm/albert";
+    #     in
+    #     mkIf cfg.wayland.enable {
+    #         "waybar/macchiato.css" = config.lib.file.mkOutOfStoreSymlink  "${dir}/macchiato.css";
+        # };
 
-    # style =
-    #   with config.lib.stylix;
-    #   # css
-    #   ''
-    #     * {
-    #       font-size: 10pt;
-    #       font-family: "JetBrainsMono Nerd Font";
-    #       font-weight: bold;
-    #       transition-property: background-color;
-    #       transition-duration: 0.5s;
-    #     }
-    #     window#waybar {
-    #         background-color: transparent;
-    #     }
-    #     #workspaces button.focused,
-    #     #workspaces button.active,
-    #     #window,
-    #     #clock,
-    #     #cpu,
-    #     #memory,
-    #     #custom-notifications,
-    #     #custom-hostname,
-    #     #battery,
-    #     #idle_inhibitor,
-    #     #network,
-    #     #pulseaudio,
-    #     #backlight,
-    #     #tray,
-    #     #custom-currentplayer,
-    #     #custom-player
-    #     {
-        #     background-color:  #${colors.base01}; /* 01 */
-        #     color: #${colors.base06}; /* 05 */
-        #     padding: 0px 10px;
-        #     border-radius: 10px;
-        #     margin: 4px;
-        #     border: 1px solid #${colors.base06};
-        # }
-        # #workspaces button {
-        #     border-radius: 5px;
-        #     padding: 0px 10px
-        # }
-        # #workspaces button,
-        # #workspaces button.hidden
-        # {
-        #     background-color: #${colors.base01}; /* 0A */
-        #     color: #${colors.base05}; /* 00 */
-        #     padding: 0px 10px;
-        #     border-radius: 10px;
-        #     margin: 4px;
-        #     border: 1px solid #${colors.base06};
-      #   }
-      # '';
+    style =
+      with config.lib.stylix;
+      # css
+      ''
+        * {
+          font-size: 10pt;
+          font-family: "JetBrainsMono Nerd Font";
+          font-weight: bold;
+          transition-property: background-color;
+          transition-duration: 0.5s;
+        }
+        window#waybar {
+            background-color: transparent;
+        }
+        #workspaces button.focused,
+        #workspaces button.active,
+        #window,
+        #clock,
+        #cpu,
+        #memory,
+        #custom-notifications,
+        #custom-hostname,
+        #battery,
+        #idle_inhibitor,
+        #network,
+        #pulseaudio,
+        #backlight,
+        #tray,
+        #custom-currentplayer,
+        #custom-player
+        {
+            background-color:  #${colors.base01}; /* 01 */
+            color: #${colors.base06}; /* 05 */
+            padding: 0px 10px;
+            border-radius: 10px;
+            margin: 4px;
+            border: 1px solid #${colors.base06};
+        }
+        #workspaces button {
+            border-radius: 5px;
+            padding: 0px 10px
+        }
+        #workspaces button,
+        #workspaces button.hidden
+        {
+            background-color: #${colors.base01}; /* 0A */
+            color: #${colors.base05}; /* 00 */
+            padding: 0px 10px;
+            border-radius: 10px;
+            margin: 4px;
+            border: 1px solid #${colors.base06};
+        }
+      '';
       };
 }

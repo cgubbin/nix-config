@@ -64,6 +64,17 @@ in
       statix
 
       age
+      aerc
+      ast-grep
+      claude-code
+      grim
+      hunspell
+      proximity-sort
+      semgrep
+      shellcheck
+      slurp
+      treefmt
+      valgrind
     ]
   );
   programs.eza = {
