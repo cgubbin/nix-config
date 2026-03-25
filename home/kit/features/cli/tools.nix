@@ -3,27 +3,26 @@
   lib,
   pkgs,
   ...
-}:
-let
+}: let
   inherit (lib) mkIf;
   cfg = config.home-config.cli;
-in
-{
+in {
   home.packages = mkIf cfg.commonTools.enable (
-    with pkgs;
-    [
+    with pkgs; [
       neofetch
       trash-cli
       dust
+      duf
+      dysk
       ripgrep
       htop
+      procs
 
       yq-go
       jq
       just
       eza
       fd
-      fzf
       neofetch
       tree
       watch
@@ -38,7 +37,7 @@ in
       tdf
       see-cat
       rsync
-      master.vault-tasks
+      # vault-tasks
       television
       transmission_4
       restic
@@ -47,6 +46,8 @@ in
 
       hexyl
       nasm
+      broot
+      bandwhich
 
       # Yazi functionality
       ffmpeg-headless

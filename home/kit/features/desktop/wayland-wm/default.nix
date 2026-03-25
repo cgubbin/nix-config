@@ -32,7 +32,4 @@ in
 	);
 
 	services.playerctld.enable = cfg.wayland.enable;
-
-	# home.sessionVariables = (
-	# );
 }

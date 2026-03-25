@@ -1,0 +1,99 @@
+-- -- [
+-- -- snip_env + autosnippets
+-- -- ]
+-- local ls = require("luasnip")
+-- local s = ls.snippet
+-- local sn = ls.snippet_node
+-- local isn = ls.indent_snippet_node
+-- local t = ls.text_node
+-- local i = ls.insert_node
+-- local f = ls.function_node
+-- local c = ls.choice_node
+-- local d = ls.dynamic_node
+-- local r = ls.restore_node
+-- local events = require("luasnip.util.events")
+-- local ai = require("luasnip.nodes.absolute_indexer")
+-- local extras = require("luasnip.extras")
+-- local l = extras.lambda
+-- local rep = extras.rep
+-- local p = extras.partial
+-- local m = extras.match
+-- local n = extras.nonempty
+-- local dl = extras.dynamic_lambda
+-- local fmt = require("luasnip.extras.fmt").fmt
+-- local fmta = require("luasnip.extras.fmt").fmta
+-- local conds = require("luasnip.extras.expand_conditions")
+-- local postfix = require("luasnip.extras.postfix").postfix
+-- local types = require("luasnip.util.types")
+-- local parse = require("luasnip.util.parser").parse_snippet
+-- local ms = ls.multi_snippet
+-- local autosnippet = ls.extend_decorator.apply(s, { snippetType = "autosnippet" })
+--
+-- -- [
+-- -- personal imports
+-- -- ]
+-- package.path = package.path .. ";" .. vim.fn.stdpath("config") .. "/LuaSnip/tex/?.lua"
+-- local tex = require("utils.conditions")
+-- local line_begin = require("luasnip.extras.conditions.expand").line_begin
+--
+--
+-- M = {
+--     -- Chem modes
+--     autosnippet({ trig = "cnc", name = "[concentration]", dscr = "species with concentration" },
+--         fmta([[\left[\ce{<>}\right]<>]],
+--             { i(1), i(0) })),
+--     autosnippet({ trig = "cre", name = "[chemical equilibrium]", dscr = "Chemical equilibrium reaction" },
+--         fmta([[\ce{<> <=> <>}<>]], {
+--             i(1, "H2O(l)"),
+--             i(2, "H+ + OH-"),
+--             i(0),
+--         })
+--     ),
+--     autosnippet({ trig = "crr", name = "[chemical reaction]", dscr = "Chemical reaction" },
+--         fmta([[\ce{<> -> <>}<>]], {
+--             i(1),
+--             i(2),
+--             i(0),
+--         })),
+--     autosnippet(
+--         { trig = "car", name = "chem arrow with condition" },
+--         fmta([[\ce{<> ->[<>] <>}<>]], {
+--             i(1),
+--             i(2, "\\Delta"),
+--             i(3),
+--             i(0),
+--         })
+--     ),
+--     autosnippet(
+--         { trig = "acid", name = "acid dissociation" },
+--         fmta([[\ce{<> <=> H+ + <>}<>]], {
+--             i(1, "HA"),
+--             i(2, "A-"),
+--             i(0),
+--         })
+--     ),
+--     autosnippet(
+--         { trig = "base", name = "base hydrolysis" },
+--         fmta([[\ce{<> + H2O <=> <> + OH-}<>]], {
+--             i(1, "B"),
+--             i(2, "BH+"),
+--             i(0),
+--         })
+--     ),
+--     autosnippet(
+--         { trig = "kc", name = "Kc expression" },
+--         fmta([[
+-- K_c = \frac{<>}{<>}<>
+-- ]], {
+--             i(1, [[\left[\ce{C}\right]^c \left[\ce{D}\right]^d]]),
+--             i(2, [[\left[\ce{A}\right]^a \left[\ce{B}\right]^b]]),
+--             i(0),
+--         })
+--     ),
+--     autosnippet({ trig = "ph", name = "pH" }, t("pH")),
+--     autosnippet({ trig = "pka", name = "pKa" }, t("pK_a")),
+--     autosnippet({ trig = "pkb", name = "pKb" }, t("pK_b"))
+--
+-- }
+--
+-- return M

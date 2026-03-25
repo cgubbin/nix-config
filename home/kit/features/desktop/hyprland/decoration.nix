@@ -25,13 +25,13 @@ in
       inactive_opacity = 0.7;
       fullscreen_opacity = 0.8;
       rounding = 5;
-      blur = {
-        enabled = true;
-        size = 5;
-        passes = 3;
-        new_optimizations = true;
-        ignore_opacity = true;
-      };
+      # blur = {
+      #   enabled = true;
+      #   size = 5;
+      #   passes = 3;
+      #   new_optimizations = true;
+      #   ignore_opacity = true;
+      # };
       shadow = {
         enabled = true;
         range = 12;
@@ -40,7 +40,7 @@ in
 	# color_inactive = "0xff$baseAlpha";
       };
     };
-    layerrule = "blur, logout_dialog";
+    # layerrule = "blur, logout_dialog";
     animations = {
       enabled = true;
       bezier = [

@@ -46,5 +46,23 @@
       		workspace = "1";
       		primary = true;
     	}
+    	{
+      		name = "DP-5";
+      		width = 2560;
+      		height = 1440;
+      		refreshRate = 59.95;
+      		scale = 1.0;
+      		x = 2560;
+      		workspace = "2";
+    	}
+    	{
+      		name = "DP-6";
+      		width = 3840;
+      		height = 2160;
+      		refreshRate = 30.0;
+      		scale = 1.5;
+      		x = 5160;
+      		workspace = "3";
+    	}
     ];	
 }

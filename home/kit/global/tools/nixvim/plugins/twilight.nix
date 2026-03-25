@@ -1,7 +1,9 @@
+{ ... }:
 {
-	programs.nixvim.plugins.twilight = {
-		enable = true;
-		settings = {
+	programs.nixvim = {
+        plugins.twilight = {
+		    enable = true;
+		    settings = {
     			dimming.alpha = 0.4;
     			context = 20;
     			treesitter = true;
@@ -9,8 +11,18 @@
       				"function"
       				"method"
     			];
-  		};
+  		    };
+        };
+	    plugins.web-devicons.enable = true;
+
+        keymaps = [
+            {
+                mode = "n";
+                key = "<leader>tt";
+                action = "<cmd>Twilight<cr>";
+                options.desc = "Toggle Twilight";
+            }
+        ];
 	};
 
-	programs.nixvim.plugins.web-devicons.enable = true;
 }

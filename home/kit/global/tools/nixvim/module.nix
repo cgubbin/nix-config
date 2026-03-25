@@ -5,6 +5,4 @@
 		./plugins
 		./themes.nix
 	];
-
-	plugins.lualine.enable = true;
 }

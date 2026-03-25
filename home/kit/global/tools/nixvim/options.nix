@@ -5,6 +5,27 @@
 }:
 {
    programs.nixvim = {
+    extraFiles = {
+        "lua/kit/functions/utils.lua".source = ./lua/kit/functions/utils.lua;
+        "lua/kit/functions/init.lua".source = ./lua/kit/functions/init.lua;
+        "after/queries/ecma/textobjects.scm".source = ./after/queries/ecma/textobjects.scm;
+
+        "LuaSnip/markdown/utils/conditions.lua".source = ./snippets/markdown/utils/conditions.lua;
+        "LuaSnip/markdown/chem.lua".source = ./snippets/markdown/chem.lua;
+        "LuaSnip/markdown/math.lua".source = ./snippets/markdown/math.lua;
+        "LuaSnip/markdown/math_commands.lua".source = ./snippets/markdown/math_commands.lua;
+
+        "LuaSnip/tex/utils/conditions.lua".source = ./snippets/tex/utils/conditions.lua;
+        "LuaSnip/tex/utils/helpers.lua".source = ./snippets/tex/utils/helpers.lua;
+        "LuaSnip/tex/utils/init.lua".source = ./snippets/tex/utils/init.lua;
+        "LuaSnip/tex/utils/scaffolding.lua".source = ./snippets/tex/utils/scaffolding.lua;
+        "LuaSnip/tex/chem.lua".source = ./snippets/tex/chem.lua;
+        "LuaSnip/tex/commands.lua".source = ./snippets/tex/commands.lua;
+        "LuaSnip/tex/delimiters.lua".source = ./snippets/tex/delimiters.lua;
+        "LuaSnip/tex/environments.lua".source = ./snippets/tex/environments.lua;
+        "LuaSnip/tex/math.lua".source = ./snippets/tex/math.lua;
+        "LuaSnip/tex/math_commands.lua".source = ./snippets/tex/math_commands.lua;
+    };
    	opts = {
    		backup = false;
     		clipboard = "unnamedplus";               # allows neovim to access the system clipboard
@@ -44,6 +65,7 @@
     		guicursor = "";
     		incsearch = true;
     		nu = true;
+            undodir = ["${config.xdg.dataHome}/nvim/undo"];
     		# undodir = os.getenv("HOME") .. "/.vim/undodir",
    	};
    };

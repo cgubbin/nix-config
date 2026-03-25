@@ -1,5 +1,8 @@
+{ ... }:
 {
-	programs.nixvim.plugins.wrapping = {
-		enable = true;
+    programs.nixvim = {
+        plugins.wrapping = {
+		    enable = true;
+        };
 	};
 }

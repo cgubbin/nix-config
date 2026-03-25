@@ -4,11 +4,10 @@
   config,
   lib,
   ...
-}:
-let
+}: let
   inherit (lib) mkIf;
   cfg = config.home-config.gui;
-  plugins = inputs.firefox-addons.packages.${pkgs.system};
+  plugins = inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system};
   buildFirefoxXpiAddon = lib.makeOverridable (
     {
       src,
@@ -17,28 +16,27 @@ let
       addonId,
       ...
     }:
-    pkgs.stdenv.mkDerivation {
-      name = "${pname}-${version}";
+      pkgs.stdenv.mkDerivation {
+        name = "${pname}-${version}";
 
-      inherit src;
+        inherit src;
 
-      preferLocalBuild = true;
-      allowSubstitutes = true;
+        preferLocalBuild = true;
+        allowSubstitutes = true;
 
-      passthru = {
-        inherit addonId;
-      };
+        passthru = {
+          inherit addonId;
+        };
 
-      buildCommand = ''
-        dst="$out/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
-        mkdir -p "$dst"
-        install -v -m644 "$src" "$dst/${addonId}.xpi"
-      '';
-    }
+        buildCommand = ''
+          dst="$out/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+          mkdir -p "$dst"
+          install -v -m644 "$src" "$dst/${addonId}.xpi"
+        '';
+      }
   );
-in
-{
-  stylix.targets.firefox.profileNames = [ "kit" ];
+in {
+  stylix.targets.firefox.profileNames = ["kit"];
   programs.firefox = mkIf cfg.firefox.enable {
     enable = true;
     package = pkgs.firefox.override {
@@ -52,8 +50,7 @@ in
       search = {
         force = true;
         default = "google";
-        # default = "SearxNG";
-        privateDefault = "SearxNG";
+        privateDefault = "google";
         engines = {
           # "SearxNG" = {
           #   urls = [
@@ -67,46 +64,46 @@ in
           #   ];
           # };
           "MyNixOS" = {
-            urls = [ { template = "https://mynixos.com/search?q={searchTerms}"; } ];
-            definedAliases = [ "@nix" ];
+            urls = [{template = "https://mynixos.com/search?q={searchTerms}";}];
+            definedAliases = ["@nix"];
           };
           "Nixpkgs" = {
-            urls = [ { template = "https://search.nixos.org/packages?&query={searchTerms}"; } ];
-            definedAliases = [ "@pkg" ];
+            urls = [{template = "https://search.nixos.org/packages?&query={searchTerms}";}];
+            definedAliases = ["@pkg"];
           };
           "Nixpkgs Pulls" = {
             urls = [
-              { template = "https://github.com/NixOS/nixpkgs/pulls?q=is%3Apr+is%3Aopen+{searchTerms}"; }
+              {template = "https://github.com/NixOS/nixpkgs/pulls?q=is%3Apr+is%3Aopen+{searchTerms}";}
             ];
-            definedAliases = [ "@npp" ];
+            definedAliases = ["@npp"];
           };
           "GitHub Repos" = {
-            urls = [ { template = "https://github.com/search?q={searchTerms}&type=repositories"; } ];
-            definedAliases = [ "@gh" ];
+            urls = [{template = "https://github.com/search?q={searchTerms}&type=repositories";}];
+            definedAliases = ["@gh"];
           };
           "GitHub Code" = {
-            urls = [ { template = "https://github.com/search?q={searchTerms}&type=code"; } ];
-            definedAliases = [ "@gc" ];
+            urls = [{template = "https://github.com/search?q={searchTerms}&type=code";}];
+            definedAliases = ["@gc"];
           };
           "Karakeep" = {
-            urls = [ { template = "https://karakeep.ltvnt.com/dashboard/search?q={searchTerms}"; } ];
-            definedAliases = [ "@kr" ];
+            urls = [{template = "https://karakeep.ltvnt.com/dashboard/search?q={searchTerms}";}];
+            definedAliases = ["@kr"];
           };
           bing.metaData.hidden = true;
           "amazondotcom-us".metaData.hidden = true;
           wikipedia.metaData.hidden = true;
-          "google".metaData.hidden = true;
-          "ddg".metaData.hidden = true;
+          perplexity.metaData.hidden = true;
+          "google".metaData.hidden = false;
+          "ddg".metaData.hidden = false;
         };
       };
       userChrome = ''
         #TabsToolbar{ visibility: collapse !important }
       '';
-      extensions.packages =
-        with plugins;
+      extensions.packages = with plugins;
         [
-	  # onepassword-password-manager
-	  zotero-connector
+          # onepassword-password-manager
+          zotero-connector
           adaptive-tab-bar-colour
           clearurls
           darkreader
@@ -118,7 +115,7 @@ in
           ublock-origin
           unpaywall
           batchcamp
-          (limit-limit-distracting-sites.overrideAttrs { meta.license.free = true; })
+          (limit-limit-distracting-sites.overrideAttrs {meta.license.free = true;})
           tridactyl
         ]
         ++ [
@@ -243,8 +240,7 @@ in
         # https://github.com/tlswg/tls13-spec/issues/1001
         "security.tls.enable_0rtt_data" = false;
         # Use Mozilla geolocation service instead of Google if given permission
-        "geo.provider.network.url" =
-          "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%";
+        "geo.provider.network.url" = "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%";
         "geo.provider.use_gpsd" = false;
         # https://support.mozilla.org/en-US/kb/extension-recommendations
         "browser.newtabpage.activity-stream.asrouter.userprefs.cfr" = false;
@@ -323,6 +319,5 @@ in
         "extensions.formautofill.heuristics.enabled" = false;
       };
     };
-
   };
 }

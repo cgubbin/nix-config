@@ -13,6 +13,8 @@ in
 		with pkgs;
 		[
 			_1password-gui
+            keymapp
+            zathura
 		]
 	);
 }

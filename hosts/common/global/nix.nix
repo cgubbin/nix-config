@@ -44,6 +44,8 @@
     flake = "/home/kit/.dotfiles";
   };
 
+  hardware.keyboard.zsa.enable = true;
+
   environment.systemPackages = [
     pkgs.nix-direnv
   ];

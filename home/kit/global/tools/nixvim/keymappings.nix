@@ -316,6 +316,26 @@
 			noremap = true;
 		};
 	}
+        {
+        action = "<cmd>Oil<CR>";
+        key = "-";
+        mode = "n";
+        options = {
+            desc = "Toggle Oil.";
+            silent = true;
+            noremap = true;
+        };
+    }
+        {
+        action = "<cmd>Neotree toggle<CR>";
+        key = "<C-b>";
+        mode = "n";
+        options = {
+            desc = "Toggle Tree View.";
+            silent = true;
+            noremap = true;
+        };
+    }
     ];
   };
 }

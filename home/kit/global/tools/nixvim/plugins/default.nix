@@ -1,22 +1,24 @@
-{ ... }:
-{
+{...}: {
   imports = [
-    ./cmp.nix
-    ./conform.nix
+    ./alpha.nix
     ./comment.nix
+    ./conform.nix
     ./dap.nix
     ./dressing.nix
     ./flash.nix
     ./harpoon.nix
     ./indent-blankline.nix
     ./lazy-git.nix
-    ./leap.nix
+    ./lint.nix
     ./lsp.nix
     ./lualine.nix
     ./neo-tree.nix
     ./neotest.nix
+    ./notebook.nix
     ./obsidian.nix
     ./oil.nix
+    ./overseer.nix
+    ./persistence.nix
     ./rustaceanvim.nix
     ./snacks.nix
     ./surround.nix
@@ -26,9 +28,13 @@
     ./treesitter.nix
     ./trouble.nix
     ./twilight.nix
+    ./typst.nix
+    ./ufo.nix
     ./undotree.nix
+    ./vimtex.nix
     ./which-key.nix
     ./wrapping.nix
+    ./zellij.nix
     ./zen_mode.nix
   ];
 }

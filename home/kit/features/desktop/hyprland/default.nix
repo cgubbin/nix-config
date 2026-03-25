@@ -2,6 +2,7 @@
 	config,
 	pkgs,
 	lib,
+    inputs,
 	...
 }:
 let
@@ -22,6 +23,7 @@ in
 		# Whether to enable XWayland
 		xwayland.enable = true;
 
+
 		extraConfig = 
 			let
 				swaync = lib.getExe' pkgs.swaynotificationcenter "swaync";
@@ -29,6 +31,7 @@ in
 				albert = lib.getExe pkgs.albert;
 			in
 			''
+
 windowrulev2 = float,class:(1Password)
 
 exec-once = ${swaync};
@@ -114,10 +117,26 @@ $mantleAlpha = 1e2030
 
 $crust = rgb(181926)
 $crustAlpha = 181926
+
+input {
+    kb_layout = us
+    numlock_by_default = true
+    kb_options = ctrl:nocaps
+    resolve_binds_by_sym = true
+}
+
+device {
+    name = at-translated-set-2-keyboard
+    kb_variant = colemak_dh_ortho
+    kb_layout = us
+}
 			'';
-		plugins = with pkgs.hyprlandPlugins; [
-			hypr-dynamic-cursors
-		];
+		# plugins = with pkgs.hyprlandPlugins; [
+		# 	hypr-dynamic-cursors
+		# ];
+		# plugins = [
+		 	# inputs.hyprland-plugins.packages.${pkgs.stdenv.hostPlatform.system}.hyprfocus
+		# ];
 		settings = {
 			env = [
 				"ELECTRON_OZONE_PLATFORM_HINT,auto"
@@ -138,11 +157,11 @@ $crustAlpha = 181926
         			no_hardware_cursors = true;
       			};
       			input = {
-        			kb_layout = "us";
-        			kb_variant = "colemak_dh_ortho";
-
-        			numlock_by_default = true;
-        			kb_options = "ctrl:nocaps";
+        			# kb_layout = "us";
+        			# kb_variant = "colemak_dh_ortho";
+           #
+        			# numlock_by_default = true;
+        			# kb_options = "ctrl:nocaps";
         			touchpad = {
           				disable_while_typing = true;
           				natural_scroll = false;

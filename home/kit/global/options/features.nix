@@ -133,18 +133,18 @@ in
         hypridleConfig = {
           screenDimTime = mkOption {
             type = lib.types.ints.u32;
-            default = 90;
+            default = 1800;
             description = "Screen dim time in seconds";
           };
           lockTime = mkOption {
             type = lib.types.ints.u32;
-            default = 120;
+            default = 3600;
             description = "Lock time in seconds";
           };
 
           suspendTime = mkOption {
             type = lib.types.ints.u32;
-            default = 300;
+            default = 7200;
             description = "Suspend time in seconds";
           };
         };
