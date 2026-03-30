@@ -2,14 +2,13 @@
   config,
   pkgs,
   ...
-}: {
+}:
+{
   home = {
     username = "kit";
-    homeDirectory = "/home/kit";
     sessionVariables = {
       TERMINAL = "kitty";
       BROWSER = "firefox";
-      MOZ_ENABLE_WAYLAND = "1";
     };
   };
 

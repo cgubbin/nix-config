@@ -3,12 +3,15 @@
   pkgs,
   lib,
   ...
-}: let
+}:
+let
   inherit (lib) mkIf;
   cfg = config.home-config.dev;
-in {
+in
+{
   home.packages = mkIf cfg.devTools.enable (
-    with pkgs; [
+    with pkgs;
+    [
       nix-tree
       tokei
       gh
@@ -25,13 +28,7 @@ in {
     ]
   );
 
-  services.ollama = {
-    enable = true;
-    # acceleration = "cuda";
-    package = pkgs.ollama-cpu;
-  };
-
-  programs.lazygit = {
+  programs.lazygit = mkIf cfg.devtools.enable {
     enable = true;
     settings.git = {
       overrideGpg = true;

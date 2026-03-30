@@ -5,7 +5,8 @@
   config,
   pkgs,
   ...
-}: {
+}:
+{
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -57,7 +58,10 @@
   users.users.kit = {
     isNormalUser = true;
     description = "Christopher Gubbin";
-    extraGroups = ["networkmanager" "wheel"];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+    ];
     shell = pkgs.fish;
     hashedPasswordFile = config.sops.secrets.kitsune_passwd.path;
   };
@@ -81,13 +85,13 @@
 
   programs.steam = {
     enable = true;
-    extraCompatPackages = [pkgs.proton-ge-bin];
+    extraCompatPackages = [ pkgs.proton-ge-bin ];
   };
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     #  wget
     lshw
   ];

@@ -3,12 +3,15 @@
   lib,
   pkgs,
   ...
-}: let
+}:
+let
   inherit (lib) mkIf;
   cfg = config.home-config.cli;
-in {
+in
+{
   home.packages = mkIf cfg.commonTools.enable (
-    with pkgs; [
+    with pkgs;
+    [
       neofetch
       trash-cli
       dust
@@ -47,7 +50,6 @@ in {
       hexyl
       nasm
       broot
-      bandwhich
 
       # Yazi functionality
       ffmpeg-headless
@@ -55,7 +57,6 @@ in {
       poppler
       resvg
       imagemagick
-      xclip
 
       # Nix linting
       alejandra
@@ -68,14 +69,18 @@ in {
       aerc
       ast-grep
       claude-code
-      grim
       hunspell
-      proximity-sort
       semgrep
       shellcheck
-      slurp
       treefmt
+    ]
+    ++ optionals pkgs.stdenv.isLinux [
+      xclip
+      grim
+      slurp
       valgrind
+      bandwhich
+      proximity-sort
     ]
   );
   programs.eza = {

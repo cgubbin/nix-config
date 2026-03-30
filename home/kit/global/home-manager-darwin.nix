@@ -1,0 +1,9 @@
+{
+  ...
+}:
+{
+  home = {
+    homeDirectory = "/Users/kit";
+  };
+
+}

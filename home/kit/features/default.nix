@@ -1,11 +1,11 @@
 { ... }:
 {
-    imports = [
-    	./cli
-    	./desktop
-    	./dev
-    	./fonts
-	./gui
-        #./gaming
-    ];
+  imports = [
+    ./cli
+    ./desktop
+    ./dev
+    ./fonts
+    ./gui
+    #./gaming
+  ];
 }

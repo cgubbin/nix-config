@@ -1,58 +1,48 @@
 {
-    config,
-    ...
+  config,
+  lib,
+  ...
 }:
 let
-    inherit (config.home-config.cli.commonTools) enable;
+  inherit (lib)
+    mkIf
+    mapAttrs
+    mapAttrs'
+    nameValuePair
+    ;
+
+  cfg = config.home-config.cli.syncthing;
+  homeDir = config.home.homeDirectory;
 in
 {
-    services.syncthing = {
-        inherit enable;
-        # openDefaultPorts = true;
+  services.syncthing = mkIf cfg.enable {
+    enable = true;
 
-        guiAddress = "127.0.0.1:8385";
-        # user = "kit";
-        # group = "users";
+    guiAddress = "127.0.0.1:8385";
 
-        key = "/home/kit/.keys/workstation/key.pem";
-        cert = "/home/kit/.keys/workstation/cert.pem";
+    key = "${homeDir}/.${cfg.localKeyDirName}/key.pem";
+    cert = "${homeDir}/.${cfg.localKeyDirName}/cert.pem";
 
-        overrideDevices = true;
-        overrideFolders = true;
+    overrideDevices = true;
+    overrideFolders = true;
 
-        settings = {
-            devices = {
-                "Christophers-MacBook-Pro.local" = {
-                    id = "BMVUX2J-YQOZ5G5-YR7FFDB-NBVFNUX-47KBBTR-3BSQ2TL-GAKVBY3-GFYDMA3";
-                };
+    settings = {
+      devices = mapAttrs (_name: id: { inherit id; }) cfg.devices;
+
+      folders = mapAttrs (_folderName: folderCfg: {
+        label = folderCfg.label or _folderName;
+        path = "${homeDir}/${folderCfg.path}";
+        devices = folderCfg.devices;
+
+        versioning =
+          folderCfg.versioning or {
+            type = "simple";
+            params = {
+              keep = "10";
+              cleanoutDays = "0";
             };
-
-            folders = {
-                "obsidian" = {
-                    label="obsidian";
-                    path = "/home/kit/obsidian";
-                    devices = [
-                        "Christophers-MacBook-Pro.local"
-                    ];
-                    versioning = {
-                        type = "simple";
-                        params = {
-                            keep = "10";
-                            cleanoutDays = "0";
-                        };
-                    };
-                };
-            };
-        };
-
-        # folders = {
-        #     "obs" = {
-        #         label = "Obsidian";
-        #         path = "/home/kit/Obsidian";
-        #         devices = [
-        #             "MacBook Pro 2024"
-        #         ];
-        #     };
-        # };
+          };
+      }) cfg.folders;
     };
+  };
 }

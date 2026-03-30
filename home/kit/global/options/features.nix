@@ -1,6 +1,6 @@
 { lib, ... }:
 let
-  inherit (lib) mkEnableOption mkOption;
+  inherit (lib) mkEnableOption mkOption types;
 in
 {
   options.home-config = {
@@ -15,6 +15,60 @@ in
       VPNC.enable = mkEnableOption ''
         Enable VPNC
       '';
+
+      syncthing = {
+        enable = mkEnableOption ''
+          Enable Syncthing
+        '';
+
+        localKeyDirName = mkOption {
+          type = types.str;
+        };
+
+        devices = mkOption {
+          type = types.attrsOf types.str;
+          default = { };
+          example = {
+            kitsune = "DEVICE-ID-1";
+            macbook = "DEVICE-ID-2";
+          };
+        };
+
+        folders = mkOption {
+          type = types.attrsOf (
+            types.submodule {
+              options = {
+                label = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                };
+
+                path = mkOption {
+                  type = types.str;
+                };
+
+                devices = mkOption {
+                  type = types.listOf types.str;
+                  default = [ ];
+                };
+
+                versioning = mkOption {
+                  type = types.attrs;
+                  default = {
+                    type = "simple";
+                    params = {
+                      keep = "10";
+                      cleanoutDays = "0";
+                    };
+                  };
+                };
+              };
+            }
+          );
+          default = { };
+        };
+
+      };
     };
 
     gui = {
@@ -108,7 +162,6 @@ in
       '';
     };
 
-
     desktop = {
       wayland = {
 
@@ -162,6 +215,9 @@ in
         Enable Gnome
       '';
 
+    };
+
+    theme = {
       stylix.enable = mkEnableOption ''
         Enable stylix (if enabled in NixOS config)
       '';

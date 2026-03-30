@@ -1,18 +1,18 @@
 {
-    config,
-    ...
+  config,
+  ...
 }:
 let
-    inherit (config.home-config.cli.commonTools) enable;
+  inherit (config.home-config.cli.commonTools) enable;
 in
 {
-    programs.skim = {
-        inherit enable;
-	enableFishIntegration = true;
-	defaultCommand = "rg --files --hidden";
-        changeDirWidgetOptions = [
-          "--preview 'exa --icons --git --color always -T -L 3 {} | head -200'"
-	  "--exact"
-	];
-    };
+  programs.skim = {
+    inherit enable;
+    enableFishIntegration = true;
+    defaultCommand = "rg --files --hidden";
+    changeDirWidgetOptions = [
+      "--preview 'eza --icons --git --color always -T -L 3 {} | head -200'"
+      "--exact"
+    ];
+  };
 }

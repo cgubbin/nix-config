@@ -1,6 +1,7 @@
-{...}: {
+{ ... }:
+{
   imports = [
-    ./devtools.nix
+    ./devtools
     ./zellij.nix
   ];
 }

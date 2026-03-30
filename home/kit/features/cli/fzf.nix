@@ -1,12 +1,14 @@
 {
   config,
-  pkgs,
+  lib,
   ...
-}: let
+}:
+let
   inherit (config.home-config.cli.commonTools) enable;
-in {
+in
+{
   programs.fzf = {
-    enable = true;
+    inherit enable;
     enableFishIntegration = true;
 
     defaultOptions = [
@@ -38,11 +40,4 @@ in {
       "--border"
     ];
   };
-
-  home.packages = with pkgs; [
-    fzf
-    fd
-    bat
-    eza
-  ];
 }

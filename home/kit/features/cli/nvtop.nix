@@ -9,7 +9,7 @@ let
   cfg = config.home-config.cli;
 in
 {
-  home.packages = mkIf cfg.nvTop.enable (
+  home.packages = mkIf (cfg.nvTop.enable && pkgs.stdenv.isLinux) (
     with pkgs;
     [
       nvtopPackages.nvidia

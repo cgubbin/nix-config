@@ -1,9 +1,6 @@
-{ ... }:
+{ pkgs, ... }:
 {
-	imports = [
-		./hyprland
-		./darkman.nix
-		./stylix-spec.nix
-		./wayland-wm
-	];
+  imports = [
+    (if pkgs.stdenv.isLinux then ./linux.nix else ./darwin.nix)
+  ];
 }
