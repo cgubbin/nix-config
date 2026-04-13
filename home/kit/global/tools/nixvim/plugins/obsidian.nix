@@ -16,7 +16,7 @@
             name = "metrology";
             path = "${config.home.homeDirectory}/obsidian/main/Sensorium";
             overrides = {
-              notes_subdir = "inbox";
+              notes_subdir = "98_INBOX";
 
               templates = {
                 folder = "00_System/templates";
@@ -62,7 +62,7 @@
             name = "premed";
             path = "${config.home.homeDirectory}/obsidian/main/Premed/Premed";
             overrides = {
-              notes_subdir = "inbox";
+              notes_subdir = "98_INBOX";
 
               templates = {
                 folder = "99_TEMPLATES";
@@ -89,7 +89,7 @@
         };
 
         new_notes_location = "notes_subdir";
-        notes_subdir = "inbox";
+        notes_subdir = "98_INBOX";
 
         templates = {
           folder = "templates";
@@ -406,6 +406,25 @@
       vim.api.nvim_create_user_command("PatentReviewSearch", patents.review_search, {})
       vim.api.nvim_create_user_command("PatentNextMissing", patents.next_missing, {})
       vim.api.nvim_create_user_command("PatentNextSectionGap", patents.next_section_gap, {})
+
+      local triage = require("kit.functions.patent_triage")
+
+      vim.api.nvim_create_user_command("PatentPromote", triage.promote, {})
+      vim.api.nvim_create_user_command("PatentSkip", triage.mark_skip, {})
+      vim.api.nvim_create_user_command("PatentKeep", triage.mark_keep, {})
+      vim.api.nvim_create_user_command("PatentNextInbox", triage.next_inbox, {})
+
+      vim.api.nvim_create_autocmd("BufEnter", {
+        callback = function()
+          local path = vim.api.nvim_buf_get_name(0)
+          if path:match("/01_Patents/") then
+            vim.cmd("silent! OpenPatentPdf")
+          end
+          if path:match("/98_INBOX/") then
+            vim.cmd("silent! OpenPatentPdf")
+          end
+        end
+      })
 
       patents.register_autocmds()
     '';

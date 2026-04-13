@@ -9,6 +9,7 @@
       "lua/kit/functions/utils.lua".source = ./lua/kit/functions/utils.lua;
       "lua/kit/functions/init.lua".source = ./lua/kit/functions/init.lua;
       "lua/kit/functions/patents.lua".source = ./lua/kit/functions/patents.lua;
+      "lua/kit/functions/patent_triage.lua".source = ./lua/kit/functions/patent_triage.lua;
       # Treesitter queries
       "after/queries/ecma/textobjects.scm".source = ./after/queries/ecma/textobjects.scm;
 
