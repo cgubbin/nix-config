@@ -49,7 +49,7 @@ local function vault_root(path)
     local dir = dirname(path)
     local markers = {
         "00_System", "01_Patents", "02_Concepts", "03_Components", "04_Signals", "05_Techniques", "06_Analysis",
-        "07_Queries", "08_Review", "09_Dashboards", "10_PDFs",
+        "07_Queries", "08_Review", "09_Dashboards", "10_PDFs", "98_INBOX",
     }
     local cur = dir
     while cur and cur ~= "/" and cur ~= "" do
