@@ -5,8 +5,7 @@
   config,
   pkgs,
   ...
-}:
-{
+}: {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -16,6 +15,7 @@
     ../common/optional/niri.nix
     ../common/optional/services.nix
     ../common/optional/stylix.nix
+    ../common/optional/tethering.nix
     ../common/optional/tlp.nix
     # ../common/users/kit
     ../common/global
@@ -83,9 +83,13 @@
 
   programs.fish.enable = true;
 
+  virtualisation.docker = {
+    enable = true;
+  };
+
   programs.steam = {
     enable = true;
-    extraCompatPackages = [ pkgs.proton-ge-bin ];
+    extraCompatPackages = [pkgs.proton-ge-bin];
   };
 
   # List packages installed in system profile. To search, run:
