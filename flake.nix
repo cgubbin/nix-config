@@ -33,6 +33,10 @@
       url = "github:nix-community/nixvim/nixos-26.05";
       # inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixos-wsl = {
+      url = "github:nix-community/NixOS-WSL/release-26.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     firefox-addons = {
       url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -86,16 +90,12 @@
     nix-index-database,
     sops-nix,
     nix-darwin,
+    nixos-wsl,
     nix-homebrew,
     homebrew-core,
     homebrew-cask,
     homebrew-bundle,
     aerospace,
-    # niri,
-    # nixvim,
-    # firefox-addons,
-    # impermanence,
-    # nix-secrets,
     ...
   }: let
     forEachSystem = nixpkgs.lib.genAttrs [
@@ -294,6 +294,9 @@
         #    ];
         #})
         #niri.nixosModules.niri
+      ];
+      work = mkNixos "kit" "work" "x86_64-linux" [
+        nixos-wsl.nixosModules.default
       ];
     };
     darwinConfigurations = {

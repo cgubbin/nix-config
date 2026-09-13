@@ -30,6 +30,7 @@ in {
         hurl
 
         nix-output-monitor
+        nix-direnv
         noti
         killall
         wget
@@ -38,9 +39,7 @@ in {
         rsync
         # vault-tasks
         television
-        transmission_4
         restic
-        todoist
         unar
 
         hexyl
@@ -69,6 +68,7 @@ in {
         semgrep
         shellcheck
         treefmt
+        zathura
       ]
       ++ optionals pkgs.stdenv.isLinux [
         xclip

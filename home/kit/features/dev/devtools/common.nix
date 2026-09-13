@@ -3,15 +3,12 @@
   pkgs,
   lib,
   ...
-}:
-let
+}: let
   inherit (lib) mkIf;
   cfg = config.home-config.dev;
-in
-{
+in {
   home.packages = mkIf cfg.devTools.enable (
-    with pkgs;
-    [
+    with pkgs; [
       nix-tree
       tokei
       gh
@@ -25,8 +22,25 @@ in
       clang
       gnumake
       tree-sitter
+
+      # Cloud
+      ansible
+      doctl
+      goofys
+      (google-cloud-sdk.withExtraComponents [google-cloud-sdk.components.gke-gcloud-auth-plugin])
+      krew
+      kubectl
+      kubectx
+      kubelogin-oidc
+      k9s
+      opentofu
+      terraform
     ]
   );
+
+  programs.awscli = {
+    enable = true;
+  };
 
   programs.lazygit = mkIf cfg.devTools.enable {
     enable = true;

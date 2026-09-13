@@ -1,8 +1,7 @@
-{ pkgs, ... }:
-{
+{pkgs, ...}: {
   imports = [
     ./common.nix
     ./darwin.nix
-    ./linux.nix
+    # ./linux.nix
   ];
 }

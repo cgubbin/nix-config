@@ -27,7 +27,9 @@ in {
     extraConfig = let
       swaync = lib.getExe' pkgs.swaynotificationcenter "swaync";
       copyq = lib.getExe pkgs.copyq;
-      albert = lib.getExe pkgs.albert;
+      albert = lib.getExe pkgs.master.albert;
+      proton = lib.getExe pkgs.proton-vpn;
+      onepass = lib.getExe pkgs._1password-gui;
     in ''
 
       # windowrule = float 1,class:(1Password)
@@ -35,6 +37,8 @@ in {
       exec-once = ${swaync};
       exec-once = ${copyq};
       exec-once = ${albert};
+      exec-once = ${proton};
+      exec-once = ${onepass};
 
       # Macchiato
 

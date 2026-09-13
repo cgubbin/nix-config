@@ -12,7 +12,6 @@ in {
       _1password-gui
       # drawio
       keymapp
-      obsidian
       proton-vpn
       vlc
       zed-editor

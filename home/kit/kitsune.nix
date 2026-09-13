@@ -1,5 +1,4 @@
-{ ... }:
-{
+{...}: {
   imports = [
     ./features
     ./global
@@ -20,6 +19,7 @@
       stylix.enable = true;
     };
     custom-fonts = {
+      berkeleyMono.enable = true;
       dankMono.enable = true;
     };
     gaming.enable = true;

@@ -9,7 +9,6 @@
 in {
   home.packages = mkIf cfg.utils.enable (
     with pkgs; [
-      zathura
       qbittorrent
       vlc
 
