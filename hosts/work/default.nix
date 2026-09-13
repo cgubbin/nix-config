@@ -5,6 +5,7 @@
 }: {
   imports = [
     ./sops.nix
+    ../common/optional/stylix.nix
   ];
 
   wsl = {
