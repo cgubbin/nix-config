@@ -1,0 +1,4 @@
+# Dotted feature settings deliberately repeat prefixes; this is valid Nix.
+# Keep all semantic diagnostics enabled without regrouping hardware settings.
+disabled = ["repeated_keys"]
+ignore = [".direnv"]

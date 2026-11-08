@@ -1,0 +1,42 @@
+_: {
+  flake.modules.homeManager."home-kit-features-cli-fzf" =
+    _:
+    let
+      enable = true;
+    in
+    {
+      programs.fzf = {
+        inherit enable;
+        enableFishIntegration = true;
+
+        defaultOptions = [
+          "--height=40%"
+          "--layout=reverse"
+          "--border"
+        ];
+
+        fileWidgetCommand = "fd --type f";
+        fileWidgetOptions = [
+          "--preview='bat --style=numbers --color=always {}'"
+          "--preview-window=right,60%,border-left"
+          "--bind=ctrl-/:toggle-preview"
+          "--bind=alt-k:preview-page-up"
+          "--bind=alt-j:preview-page-down"
+        ];
+
+        changeDirWidgetCommand = "fd --type d";
+        changeDirWidgetOptions = [
+          "--preview='eza --tree --level=2 --color=always {} | head -200'"
+          "--preview-window=right,50%,border-left"
+          "--bind=ctrl-/:toggle-preview"
+          "--bind=alt-k:preview-page-up"
+          "--bind=alt-j:preview-page-down"
+        ];
+
+        historyWidgetOptions = [
+          "--layout=reverse"
+          "--border"
+        ];
+      };
+    };
+}

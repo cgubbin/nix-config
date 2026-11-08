@@ -1,16 +1,9 @@
-switch HOST:
-    #!/usr/bin/env bash
-    set -euo pipefail
+# Build and inspect before explicitly activating a generation.
+build:
+    nix build path:{{justfile_directory()}}#nixosConfigurations.kitsune.config.system.build.toplevel -L
 
-    case "$(uname -s)" in
-      Linux)
-        sudo nixos-rebuild switch --flake ".#{{HOST}}" --impure -v -L --show-trace
-        ;;
-      Darwin)
-        darwin-rebuild switch --flake ".#{{HOST}}" --impure -v -L --show-trace
-        ;;
-      *)
-        echo "Unsupported OS: $(uname -s)" >&2
-        exit 1
-        ;;
-    esac
+check:
+    nix flake check path:{{justfile_directory()}} -L
+
+switch:
+    sudo nixos-rebuild switch --flake path:{{justfile_directory()}}#kitsune -L --show-trace
