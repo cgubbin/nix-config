@@ -97,3 +97,10 @@ performed as part of implementation.
   recovery scenario and is not covered by normal-unmount guarantees.
 - Check actual backup restore coverage separately; Restic client installation
   does not establish local scheduled backups.
+
+If the first switch is performed inside an old Hyprland session, an unmanaged
+SwayNC instance from that session may still own the notification bus name. Stop
+that exact stale instance, then reset-failed/start the user swaync unit. This
+handover was needed and verified during the migration; a fresh session must still
+be checked for clean lifecycle behaviour. Completed runtime observations are
+recorded in `migration/validation.md`.

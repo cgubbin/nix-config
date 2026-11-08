@@ -33,3 +33,27 @@ authentication and suspend/resume checks; verification of the new Syncthing
 service's running state and public ID after activation; backup restore coverage;
 actual adoption and host validation in the separate work repository. None of
 these is implied by successful builds or synthetic consumer tests.
+
+## Post-activation checks, 2026-11-08
+
+User completed the switch after adding a five-entry systemd-boot limit.
+`/boot` usage is now 461 MiB of 1022 MiB, with 562 MiB free. The running
+system points to the November 5 nixpkgs generation. Active Nix settings now
+include the Nix Community URL and published signing key alongside NixOS defaults.
+
+- Syncthing system unit active as kit:users; old user unit inactive. Existing
+  state directory remains owned by kit:users with mode 0700.
+- Public device ID matches the baseline. Pi5 connected; iPhone remains paused.
+  books (130 files), obsidian (463 files), and pi-media (87 files) are idle,
+  with zero needed files/bytes and zero reported folder or recent system errors.
+- Hypridle has one active user-service instance.
+- The old session's unmanaged SwayNC process blocked the newly managed unit.
+  It was stopped and the configured user unit started successfully. The user
+  confirmed receiving the test notification and successfully toggling the panel.
+  The unit is active and PartOf graphical-session.target. No Mako process found.
+- No failed user units remain after the SwayNC handover.
+
+Still pending: Hyprlock authentication, suspend/resume, a fresh UWSM session's
+startup/shutdown lifecycle, and actual backup restore verification. The successful
+system switch does not replace these manual checks. No lock, suspend, logout,
+remote backup changes or disk unmount were triggered by the maintenance inspection.
