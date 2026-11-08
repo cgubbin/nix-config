@@ -57,3 +57,19 @@ Still pending: Hyprlock authentication, suspend/resume, a fresh UWSM session's
 startup/shutdown lifecycle, and actual backup restore verification. The successful
 system switch does not replace these manual checks. No lock, suspend, logout,
 remote backup changes or disk unmount were triggered by the maintenance inspection.
+
+## Lock and first suspend test
+
+User confirmed standalone Hyprlock authentication succeeded. At 19:48:53 the
+kernel entered s2idle and resumed at 19:48:58; systemd reported suspend service
+success, but the user observed an immediate return to the lock screen. Treat
+sustained suspend as unresolved, not passed. Unlocking after this cycle succeeded.
+The wake IRQ was 9 (ACPI SCI), which does not identify the individual device.
+The kernel also logged spd5118 device-resume errors (-6); these do not establish
+the cause of the wake event. No kernel parameters or drivers were changed.
+
+The running hypridle process retained its pre-switch configuration and executed
+bare hyprctl on resume, despite the correct DPMS command in the new on-disk file.
+Restarted the user hypridle service at 19:50:30 to load that file. A fresh suspend
+test is needed to verify the command error is gone and assess whether the laptop
+remains asleep without further input. No suspend was initiated by the assistant.
