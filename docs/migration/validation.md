@@ -73,3 +73,18 @@ bare hyprctl on resume, despite the correct DPMS command in the new on-disk file
 Restarted the user hypridle service at 19:50:30 to load that file. A fresh suspend
 test is needed to verify the command error is gone and assess whether the laptop
 remains asleep without further input. No suspend was initiated by the assistant.
+
+## Second suspend test: functional pass with sensor-driver errors
+
+At 19:51:16 the kernel entered s2idle and resumed at 19:51:52, approximately
+36 seconds later. The user confirmed it remained asleep until touched. Hypridle
+requested locking before sleep, executed `hyprctl dispatch dpms on` after resume,
+and authentication/unlock succeeded. The stale bare-hyprctl usage error is gone.
+SwayNC, hypridle and system Syncthing remained active afterward.
+
+Four spd5118 device-resume callbacks (18-0050 through 18-0053) returned -6 during
+wake. Track these as a separate kernel/device-driver issue; they do not negate
+the observed functional suspend, display wake and unlock pass. No driver was
+blacklisted and no hardware power settings were changed to suppress the errors.
+The short first cycle alone did not establish spontaneous wake: the subsequent
+controlled test stayed asleep until deliberate input.
