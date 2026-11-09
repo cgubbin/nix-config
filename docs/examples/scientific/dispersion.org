@@ -1,0 +1,39 @@
+:PROPERTIES:
+:ID: e862d64a-59b4-4cb4-b713-3910f71353f7
+:END:
+#+title: Waveguide phase accumulation
+#+bibliography: references.bib
+#+cite_export: basic
+#+PROPERTY: header-args:python :python python3 :results output :exports both :eval never-export
+
+* Assumptions
+For a uniform, lossless waveguide, take the propagation constant $\beta$ to be
+independent of position. The phase grows linearly with distance.
+
+* Derivation
+Starting from $\partial E / \partial z = i\beta E$, integration gives
+\[
+E(z) = E(0)\exp(i\beta z), \qquad \phi(z) = \beta z.
+\]
+This simplified model connects to [[id:4e416ea0-dcf1-4bb6-bc8e-5d953292119a][Waveguide propagation]].
+
+* Numerical illustration
+After confirming execution, this block generates a small SVG using Python's
+standard library. Select a project interpreter via an Org Babel =:python= header.
+
+#+begin_src python
+from pathlib import Path
+points = " ".join(f"{x},{180 - x}" for x in range(0, 181, 20))
+svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><polyline fill="none" stroke="#225ea8" stroke-width="3" points="{points}"/></svg>'
+Path("phase.svg").write_text(svg, encoding="utf-8")
+print("Wrote phase.svg")
+#+end_src
+
+[[file:phase.svg]]
+
+[[file:example-waveguide.pdf][Local paper]]
+
+* Validation and reference
+At $z=0$ the phase is zero, and its slope equals $\beta$. See [cite:@example-waveguide].
+
+#+print_bibliography:
