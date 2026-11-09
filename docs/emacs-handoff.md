@@ -2,14 +2,15 @@
 
 This handoff accompanies the declarative Doom/Org feature and the completed
 OpenSpec changes `add-declarative-doom-org` and
-`add-scientific-org-and-dashboard`. The feature is on `explore/doom-org` and
-has been build- and VM-checked without activating a system generation.
+`add-scientific-org-and-dashboard`. The feature is merged into the personal
+configuration's `main` and has been build- and VM-checked without activating a
+system generation.
 
 ## Ready to try on Kitsune
 
 The Kitsune Home Manager profile enables the shared feature with notes rooted
-at `/home/kit/notes/personal`. After merging, committing and pulling the
-configuration, rebuild only when ready:
+at `/home/kit/notes/personal`. Rebuild from an updated checkout only when
+ready:
 
 ```sh
 sudo nixos-rebuild switch --flake .#kitsune
@@ -26,21 +27,27 @@ inline image; it cannot verify real Hyprland focus behavior.
 
 ## Work WSL adoption and validation
 
-The separate repository is `/home/kit/Repos/wsl-nix-config`. It uses
-flake-file/dendritic modules and its own unstable nixpkgs. Add a pinned flake
-input for this configuration repository, then import its
-`flake.modules.homeManager.shared-doom-emacs` module into the `kit` Home Manager
-profile (or `home-manager.sharedModules` for the WSL host). Set a work-only root
-such as `/home/kit/notes/work`, keep graphical integration disabled, and leave
-the default on-demand daemon behavior available. Do not sync this tree to
-personal devices.
+The separate repository is `/home/kit/Repos/wsl-nix-config`. The consumer
+import is pushed on branch `feature/doom-emacs-consumer` at commit `287e505`.
+It uses the personal configuration's pinned Doom commit `fe866d6`, sets the
+work-only root to `/home/kit/notes/work`, enables the daemon and leaves
+graphical integration disabled. Do not sync this tree to personal devices.
 
-The work profile should be configured and evaluated in its own repository;
-the personal feature's module accepts the consumer's package set and does not
-require sharing its note files. Pin the feature repository to the reviewed
-merge commit instead of following a moving branch. Build the `work` system
-closure first, inspect the input lock changes, then activate using the work
-repository's documented NixOS-on-WSL command. After a WSL shutdown/start, test
+The work config branch is ready to try, but it has not been built or activated.
+At work, check out that branch. Convert its local `workbench` input to the Git
+URL you use there, regenerate the generated flake, and create the lockfile:
+
+```sh
+git fetch origin feature/doom-emacs-consumer
+git switch feature/doom-emacs-consumer
+nix run .#write-flake
+nix flake lock
+nix build .#nixosConfigurations.work.config.system.build.toplevel --no-link -L
+```
+
+Review and commit the workbench URL and lockfile updates in the work repository.
+Then activate using that repository's documented NixOS-on-WSL command. After a
+WSL shutdown/start, test
 `org-capture t`, `org-agenda`, `emacsclient -c`, `systemctl --user status emacs`
 and the user journal. Check WSLg environment refresh and Windows focus return.
 These real WSLg checks have not yet been performed.
