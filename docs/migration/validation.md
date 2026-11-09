@@ -88,3 +88,24 @@ the observed functional suspend, display wake and unlock pass. No driver was
 blacklisted and no hardware power settings were changed to suppress the errors.
 The short first cycle alone did not establish spontaneous wake: the subsequent
 controlled test stayed asleep until deliberate input.
+
+## Continued maintenance, 2026-11-09
+
+SwayNC and hypridle remain active with no failed user units; system Syncthing is
+active. The graphical-session target still dates from 2026-11-08 18:16:53, before
+migration activation, so fresh-session startup/shutdown has not yet been tested.
+The unrelated Pi SSH/VPN report was withdrawn; no VPN troubleshooting was done.
+
+Read-only review of `/home/kit/hosts/nixos-pi5/docs/MEDIA.md` found commissioning
+restore evidence for notes: snapshot `6ece5e97`, successful repository metadata
+check, and a temporary private restore compared recursively with live notes,
+excluding Syncthing marker/version directories. The documented receipt is
+`/var/tmp/pi5-notes-restore.ZndrPD` on the Pi. This is historical documented
+verification, not a fresh remote restore performed during this maintenance run.
+The Pi module includes `/srv/notes/obsidian` in its Restic backup paths.
+
+Coverage remains limited: books are local-only, disposable media is excluded,
+and there is no complete laptop backup or independently protected off-site copy
+established by these records. Pi application-state restore evidence is separately
+recorded in that repository's USB-BACKUP.md. No private backup data or credentials
+were read, no remote service changed, and no live files were restored over.
