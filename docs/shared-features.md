@@ -1,7 +1,7 @@
 # Shared features
 
 This repository exports `modules.homeManager.shared-git`, `shared-shells`,
-`shared-cli`, and `shared-editor`. Kitsune uses the same definitions. Discovery
+`shared-cli`, `shared-editor`, and `shared-doom-emacs`. Kitsune uses the same definitions. Discovery
 alone does not enable them. All use consumer `pkgs`; identities, credentials,
 state versions and machine settings belong to the consumer.
 
@@ -11,6 +11,7 @@ state versions and machine settings belong to the consumer.
 | shared-shells | fish, Nushell, direnv and integrations | secret sourcing, Windows environment, project-template availability |
 | shared-cli | CLI packages and Atuin/Bat/FZF/Yazi/etc. | history sync choices, shell binding overrides; no cloud/AI service selection |
 | shared-editor | Nixvim baseline, plugins, snippets | matching Nixvim Home Manager companion module; work-only extensions and personal vault configuration |
+| shared-doom-emacs | Declarative Doom, Org capture/agenda/roam, optional managed daemon | Linux consumer; independent writable Org root; optional graphical session integration; see [Doom/Org guide](emacs-org.md) |
 
 Stable fixture uses this repository's locked stable nixpkgs/Home Manager/Nixvim.
 Work-like fixture uses nixpkgs `319e4cebef10cbb636c6ea392137b52ad105336a`,

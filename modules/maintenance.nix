@@ -3,7 +3,9 @@
   perSystem = { pkgs, system, ... }: {
     formatter = pkgs.nixfmt-rfc-style;
     checks.pre-commit-check = inputs.git-hooks-nix.lib.${system}.run {
-      src = ../.;
+      # A linked worktree's .git is a file pointing outside the build sandbox.
+      # Let git-hooks initialise its own temporary repository instead.
+      src = pkgs.lib.cleanSource ../.;
       hooks = {
         deadnix.enable = true;
         statix.enable = true;

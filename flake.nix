@@ -2,6 +2,10 @@
   description = "NixOS Config";
 
   inputs = {
+    doom-emacs = {
+      url = "github:marienz/nix-doom-emacs-unstraightened";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     consumer-nixpkgs.url = "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1092129.319e4cebef10/nixexprs.tar.zst";
     consumer-home-manager = {
       url = "github:nix-community/home-manager/640725978b99076e18e069f6e7d2959124584f8f";
@@ -61,10 +65,6 @@
       flake = false;
     };
 
-
-
-
-
     #     hyprland = {
     #         url = "github:hyprwm/Hyprland";
     #     };
@@ -74,10 +74,12 @@
     #     };
   };
 
-  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-    imports = [
-      inputs.flake-parts.flakeModules.modules
-      (inputs.import-tree ./modules)
-    ];
-  };
+  outputs =
+    inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        inputs.flake-parts.flakeModules.modules
+        (inputs.import-tree ./modules)
+      ];
+    };
 }
