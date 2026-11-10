@@ -15,37 +15,50 @@ are omitted. The feature never changes EDITOR or VISUAL away from Neovim.
 ## Daemon and quick entry
 
 ```sh
-org-capture       # template menu in a small frame
+org-capture       # template menu in this terminal
 org-capture t     # go directly to the TODO template
 org-agenda
 org-notes
 systemctl --user start emacs
-emacsclient -c
-emacsclient -n -c "$HOME/notes/personal/inbox.org"
+emacsclient -t
+emacsclient -t "$HOME/notes/personal/inbox.org"
 systemctl --user restart emacs
 journalctl --user -u emacs.service -b
 ```
 
-The three launch helpers start the one managed daemon on demand. Closing a
-frame preserves it. Restarting the service closes its buffers, so save first;
-Home Manager deliberately avoids restarting it automatically on config changes.
-Use `C-c C-c` to finish a capture or `C-c C-k` to cancel. Doom closes the
-dedicated capture frame after either operation; ordinary frames remain open.
+On consumers with graphical integration disabled (including the work WSL
+profile), the three launch helpers start the managed daemon on demand and open
+an interactive text frame in the current terminal. Press `q` to leave the
+agenda or notes client. Use `C-c C-c` to finish a capture or `C-c C-k` to
+cancel; either returns to the shell. Closing a client preserves the daemon.
+`emacsclient -c` requests a graphical frame; use `emacsclient -t` for terminal
+editing. Restarting the service closes its buffers, so save first. Home Manager
+does not restart it automatically on configuration changes.
+
+Inside the managed Zellij configuration, use `Ctrl-b e` for capture, `Ctrl-b a`
+for the agenda, or `Ctrl-b r` for Org-roam notes. Each opens in a centered
+floating pane; completing capture or pressing `q` closes the pane and returns
+focus to the prior layout. Running `org-capture`, `org-agenda`, or `org-notes`
+directly from a shell continues to use that terminal inline.
+
+Kitsune enables graphical integration, so its launch helpers continue to use
+graphical frames and the desktop bindings below.
 
 Kitsune shortcuts: **Super+Shift+O** opens capture and **Super+Shift+A** opens
 the agenda. They are conditional on graphical and daemon integration, and were
 checked against the existing bindings. UWSM starts/stops the daemon with
 `graphical-session.target`. These shortcuts do not affect Neovim state.
 
-## WSLg consumer and diagnosis
+## Work WSL terminal client
 
 Use the same feature with your own `knowledge.orgDirectory` and keep
-`knowledge.enableGraphicalIntegration = false`. Launch from a WSL shell that
-has WSLg's DISPLAY/WAYLAND_DISPLAY values. Helpers resolve a live Wayland socket
-from XDG_RUNTIME_DIR, or the WSLg runtime directory when WSL_INTEROP is present;
-they refresh an already-running daemon's GUI environment too. They do not
-replace XDG_RUNTIME_DIR or hard-code DISPLAY=:0. Missing graphics fails with a
-diagnostic instead of spawning another daemon.
+`knowledge.enableGraphicalIntegration = false`. The daemon and Org workflows
+run entirely in the terminal and do not require WSLg, DISPLAY, or
+WAYLAND_DISPLAY. The systemd service clears inherited graphical environment
+variables in this mode, so stale WSLg values cannot prevent daemon startup.
+Run `org-agenda`, `org-capture`, or `org-notes` from the WSL
+shell; each command returns to the shell when its client is closed. A graphical
+frame is not available in this mode; use `emacsclient -t` for direct editing.
 
 A Windows shortcut can target this command (adjust distribution and username):
 
@@ -58,12 +71,10 @@ machine (`command -v org-capture`); configurations using per-user system package
 can expose a different path. The separate work repository must explicitly
 adopt and pin the feature before this command is available there.
 
-If a frame fails, inspect `systemctl --user status emacs` and its journal, then
-check `printf '%s\n' "$DISPLAY" "$WAYLAND_DISPLAY" "$XDG_RUNTIME_DIR"` and
-whether the Wayland socket exists. Start with the launch helpers to refresh
-session graphics; direct `emacsclient -c` expects the service to be running.
-Do not run `emacs --daemon` alongside the systemd service. Real WSLg restart
-behaviour and Windows focus return require manual testing on that host.
+If a client fails, inspect `systemctl --user status emacs` and
+`journalctl --user -u emacs.service -b`. Do not run `emacs --daemon` alongside
+the systemd service. Windows can launch a WSL terminal command through a
+shortcut, but the shortcut itself is managed on Windows.
 
 ## Build before activation
 

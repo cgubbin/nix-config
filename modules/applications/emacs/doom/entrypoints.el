@@ -39,3 +39,94 @@
            (delete-frame frame t)
            (signal (car err) (cdr err)))))))
   t)
+
+(defun kit/org-terminal-quit ()
+  "Close the terminal Org client and return to its invoking shell."
+  (interactive)
+  (let ((frame (selected-frame)))
+    (when (frame-live-p frame)
+      (delete-frame frame t))))
+
+(defun kit/org-agenda-quit-or-close ()
+  "Close a terminal agenda client, or quit a regular graphical agenda."
+  (interactive)
+  (if (frame-parameter (selected-frame) 'kit-org-terminal-client)
+      (kit/org-terminal-quit)
+    (org-agenda-quit)))
+
+(defvar kit/org-terminal-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "q") #'kit/org-terminal-quit)
+    map))
+
+(define-minor-mode kit/org-terminal-mode
+  "Minor mode for closing terminal Org clients with q."
+  :lighter ""
+  :keymap kit/org-terminal-mode-map)
+
+(with-eval-after-load 'evil
+  (evil-define-key 'normal kit/org-terminal-mode-map (kbd "q") #'kit/org-terminal-quit))
+
+(with-eval-after-load 'org-agenda
+  (define-key org-agenda-mode-map (kbd "q") #'kit/org-agenda-quit-or-close)
+  (with-eval-after-load 'evil
+    (evil-define-key 'normal org-agenda-mode-map (kbd "q") #'kit/org-agenda-quit-or-close)))
+
+(defun kit/org-terminal-enable-mode (frame)
+  "Enable the terminal quit key on FRAME's current buffer."
+  (let ((buffer (window-buffer (frame-selected-window frame))))
+    (with-current-buffer buffer
+      (kit/org-terminal-mode 1))
+    (set-frame-parameter
+     frame 'kit-org-terminal-buffers
+     (cons buffer (frame-parameter frame 'kit-org-terminal-buffers)))))
+
+(defvar kit/org-terminal-capture-frame nil)
+
+(defun kit/org-terminal-capture-finished ()
+  "Close the terminal client frame after capture completes or is cancelled."
+  (when (frame-live-p kit/org-terminal-capture-frame)
+    (let ((frame kit/org-terminal-capture-frame))
+      (setq kit/org-terminal-capture-frame nil)
+      (set-frame-parameter frame 'kit-org-terminal-capture nil)
+      (delete-frame frame t))))
+
+(defun kit/org-terminal-dispatch ()
+  "Start the Org workflow named by the selected client frame parameters."
+  (let* ((frame (selected-frame))
+         (action (frame-parameter frame 'kit-org-action))
+         (key (frame-parameter frame 'kit-org-capture-key)))
+    (when action
+      (set-frame-parameter frame 'kit-org-action nil)
+      (set-frame-parameter frame 'kit-org-terminal-client t)
+      (unless (member action '("capture" "agenda" "notes"))
+        (user-error "Unknown Org workflow: %s" action))
+      (require 'org)
+      (pcase action
+        ("capture"
+         (setq kit/org-terminal-capture-frame frame)
+         (set-frame-parameter frame 'kit-org-terminal-capture t)
+         (org-capture nil (unless (equal key "") key)))
+        ("agenda"
+         (org-agenda nil "a")
+         (kit/org-terminal-enable-mode frame))
+        ("notes"
+         (make-directory (expand-file-name "roam" org-directory) t)
+         (require 'org-roam)
+         (org-roam-node-find)
+         (kit/org-terminal-enable-mode frame))))))
+
+(defun kit/org-terminal-cleanup-frame (frame)
+  "Remove terminal-only key bindings from buffers shown in FRAME."
+  (when (frame-parameter frame 'kit-org-terminal-client)
+    (dolist (buffer (frame-parameter frame 'kit-org-terminal-buffers))
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (kit/org-terminal-mode -1))))
+    (when (eq frame kit/org-terminal-capture-frame)
+      (setq kit/org-terminal-capture-frame nil))))
+
+(require 'server)
+(add-hook 'server-after-make-frame-hook #'kit/org-terminal-dispatch)
+(add-hook 'org-capture-after-finalize-hook #'kit/org-terminal-capture-finished)
+(add-hook 'delete-frame-functions #'kit/org-terminal-cleanup-frame)

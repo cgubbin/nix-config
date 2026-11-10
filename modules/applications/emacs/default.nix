@@ -35,6 +35,7 @@
               text = ''
                 action=${lib.escapeShellArg action}
                 client=${emacs}/bin/emacsclient
+                terminalClient=${lib.boolToString (!cfg.enableGraphicalIntegration)}
               ''
               + builtins.readFile ./scripts/org-client.sh;
             }
@@ -101,9 +102,15 @@
         };
         systemd.user.services.emacs = lib.mkIf cfg.enableDaemon {
           Service = {
-            # Keep session graphics from the manager, without a login shell
-            # reintroducing stale display variables from a shell startup file.
+            # Terminal-only consumers must not inherit stale WSLg variables
+            # from the user manager. Graphical consumers retain session data.
             ExecStart = lib.mkForce "${emacs}/bin/emacs --fg-daemon=%t/emacs/server";
+            UnsetEnvironment = lib.optionals (!cfg.enableGraphicalIntegration) [
+              "DISPLAY"
+              "WAYLAND_DISPLAY"
+              "GDK_BACKEND"
+              "XAUTHORITY"
+            ];
             RuntimeDirectory = "emacs";
             RuntimeDirectoryMode = "0700";
             TimeoutStartSec = 60;

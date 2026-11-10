@@ -35,6 +35,36 @@ _: {
                   bind "h" { SwitchToMode "Move"; }
                   bind "s" { SwitchToMode "Scroll"; }
                   bind "o" { SwitchToMode "Session"; }
+                  bind "e" {
+                    Run "org-capture" {
+                      floating true
+                      x "10%"
+                      y "10%"
+                      width "80%"
+                      height "75%"
+                      close_on_exit true
+                    }
+                  }
+                  bind "a" {
+                    Run "org-agenda" {
+                      floating true
+                      x "10%"
+                      y "10%"
+                      width "80%"
+                      height "75%"
+                      close_on_exit true
+                    }
+                  }
+                  bind "r" {
+                    Run "org-notes" {
+                      floating true
+                      x "10%"
+                      y "10%"
+                      width "80%"
+                      height "75%"
+                      close_on_exit true
+                    }
+                  }
                   bind "q" { Quit; }
               }
           }
