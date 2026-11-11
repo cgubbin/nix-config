@@ -2,8 +2,9 @@
 :ID: e862d64a-59b4-4cb4-b713-3910f71353f7
 :END:
 #+title: Waveguide phase accumulation
+#+latex_class: article
+#+latex_header: \usepackage{lmodern}
 #+bibliography: references.bib
-#+cite_export: basic
 #+PROPERTY: header-args:python :python python3 :results output :exports both :eval never-export
 
 * Assumptions
@@ -29,7 +30,17 @@ Path("phase.svg").write_text(svg, encoding="utf-8")
 print("Wrote phase.svg")
 #+end_src
 
-[[file:phase.svg]]
+Convert the generated vector image to PDF before PDF export. This shell block is
+also inert during export and asks for confirmation when run interactively.
+
+#+begin_src shell :results silent :eval never-export
+rsvg-convert --format pdf --output phase.pdf phase.svg
+#+end_src
+
+#+caption: Normalized phase accumulation along a uniform waveguide.
+#+name: fig:phase
+#+attr_latex: :width 0.8\linewidth
+[[file:phase.pdf]]
 
 [[file:example-waveguide.pdf][Local paper]]
 

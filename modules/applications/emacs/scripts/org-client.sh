@@ -8,20 +8,45 @@ if [[ ( "$action" == project-capture && $# -gt 2 ) || ( "$action" == capture && 
 fi
 key=${1:-}
 projectContext=
-if [[ "$action" == project-capture ]]; then
+if [[ "$action" == project-capture || "$action" == project-todo || "$action" == project-agenda ]]; then
   file=${1:-${NVIM_FILE:-}}
   line=${2:-${NVIM_LINE:-}}
-  root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+  if [[ "$action" == project-todo || "$action" == project-agenda ]]; then
+    if ! root=$(git rev-parse --show-toplevel 2>/dev/null); then
+      echo "org-$action: run this command inside a Git project" >&2
+      exit 2
+    fi
+  else
+    root=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
+  fi
+  root=$(realpath -e -- "$root")
   branch=$(git -C "$root" symbolic-ref --quiet --short HEAD 2>/dev/null || git -C "$root" rev-parse --short HEAD 2>/dev/null || true)
   commit=$(git -C "$root" rev-parse HEAD 2>/dev/null || true)
+  remote=$(git -C "$root" remote get-url origin 2>/dev/null || true)
+  permalink=
   if [[ -n "$file" && "$file" != /* ]]; then
     file=$(realpath -m -- "$file")
   fi
   if [[ -n "$file" && "$file" == "$root"/* ]]; then
     file=${file#"$root"/}
   fi
-  projectContext=$(jq -cn --arg root "$root" --arg branch "$branch" --arg commit "$commit" --arg file "$file" --arg line "$line" \
-    '{root:$root,branch:$branch,commit:$commit,file:$file,line:$line}')
+  [[ "$line" =~ ^[0-9]+$ ]] || line=
+  if [[ -n "$commit" && -n "$file" ]]; then
+    github_repo=
+    case "$remote" in
+      git@github.com:*) github_repo=${remote#git@github.com:} ;;
+      ssh://git@github.com/*) github_repo=${remote#ssh://git@github.com/} ;;
+      https://github.com/*) github_repo=${remote#https://github.com/} ;;
+    esac
+    github_repo=${github_repo%.git}
+    if [[ -n "$github_repo" && "$file" != /* ]]; then
+      encoded_file=$(jq -nr --arg path "$file" '$path | split("/") | map(@uri) | join("/")')
+      permalink="https://github.com/$github_repo/blob/$commit/$encoded_file"
+      [[ -z "$line" ]] || permalink+="#L$line"
+    fi
+  fi
+  projectContext=$(jq -cn --arg root "$root" --arg branch "$branch" --arg commit "$commit" --arg file "$file" --arg line "$line" --arg permalink "$permalink" \
+    '{root:$root,branch:$branch,commit:$commit,file:$file,line:$line,permalink:$permalink}')
   key=P
 fi
 runtime=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
@@ -81,9 +106,14 @@ if ! "$ready"; then
 fi
 if "$terminalClient"; then
   keyLiteral=$(printf '%s' "$key" | jq -Rs '.')
-  if [[ "$action" == project-capture ]]; then
+  if [[ "$action" == project-capture || "$action" == project-todo || "$action" == project-agenda ]]; then
     contextLiteral=$(printf '%s' "$projectContext" | jq -Rs '.')
-    frameParameters="((kit-org-action . \"project\") (kit-org-capture-key . $keyLiteral) (kit-org-project-context . $contextLiteral))"
+    if [[ "$action" == project-capture ]]; then
+      workflow=project
+    else
+      workflow=$action
+    fi
+    frameParameters="((kit-org-action . \"$workflow\") (kit-org-capture-key . $keyLiteral) (kit-org-project-context . $contextLiteral))"
   else
     frameParameters="((kit-org-action . \"$action\") (kit-org-capture-key . $keyLiteral))"
   fi

@@ -47,5 +47,6 @@
             (unless (string-match-p (regexp-quote expected) metadata)
               (error "Project metadata missing %s in %s" expected metadata)))))
     (set-frame-parameter frame 'kit-org-project-context old)))
+(load (expand-file-name "projects.el" (file-name-directory (or load-file-name buffer-file-name))) nil nil t)
 (load (expand-file-name "science.el" (file-name-directory (or load-file-name buffer-file-name))) nil nil t)
 t

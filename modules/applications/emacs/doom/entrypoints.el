@@ -7,7 +7,8 @@
          (wayland (alist-get 'wayland data))
          (display (alist-get 'display data))
          (parameters '((window-system . pgtk))))
-    (unless (member action '("capture" "agenda" "notes" "project"))
+    (unless (member action '("capture" "agenda" "notes" "project"
+                             "project-todo" "project-agenda"))
       (user-error "Unknown Org workflow: %s" action))
     ;; Refresh an already-running daemon too. The client runtime/socket remains
     ;; owned by systemd; only the GUI connection environment is changed here.
@@ -18,14 +19,20 @@
     (when (and (string-empty-p wayland) (string-empty-p display))
       (user-error "No graphical display in launch request"))
     (require 'org)
-    (if (member action '("capture" "project"))
+    (if (member action '("capture" "project" "project-todo"))
         (let ((+org-capture-frame-parameters
                (append '((name . "doom-capture") (transient . t)
                          (kit-org-capture . t) (width . 80) (height . 24))
                        `((kit-org-project-context . ,(alist-get 'projectContext data)))
                        parameters)))
           (condition-case nil
-              (+org-capture/open-frame nil (if (equal action "project") "P" key))
+              (if (equal action "project-todo")
+                  (let* ((context (json-parse-string (alist-get 'projectContext data)
+                                                     :object-type 'alist))
+                         (root (kit/org-register-project (alist-get 'root context)))
+                         (default-directory root))
+                    (+org-capture/open-frame nil "p"))
+                (+org-capture/open-frame nil (if (equal action "project") "P" key)))
             (quit (+org-capture-cleanup-frame-h))))
       (let ((frame (make-frame (append '((name . "Org")) parameters))))
         (select-frame-set-input-focus frame)
@@ -33,9 +40,14 @@
             (with-selected-frame frame
               (if (equal action "agenda")
                   (org-agenda nil "a")
-                (make-directory (expand-file-name "roam" org-directory) t)
-                (require 'org-roam)
-                (org-roam-node-find)))
+                (if (equal action "project-agenda")
+                    (let* ((context (json-parse-string (alist-get 'projectContext data)
+                                                       :object-type 'alist))
+                           (root (kit/org-register-project (alist-get 'root context))))
+                      (kit/org-project-agenda-at-root root))
+                  (make-directory (expand-file-name "roam" org-directory) t)
+                  (require 'org-roam)
+                  (org-roam-node-find))))
           ((error quit)
            (delete-frame frame t)
            (signal (car err) (cdr err)))))))
@@ -100,7 +112,8 @@
     (when action
       (set-frame-parameter frame 'kit-org-action nil)
       (set-frame-parameter frame 'kit-org-terminal-client t)
-      (unless (member action '("capture" "agenda" "notes" "project"))
+      (unless (member action '("capture" "agenda" "notes" "project"
+                               "project-todo" "project-agenda"))
         (user-error "Unknown Org workflow: %s" action))
       (require 'org)
       (pcase action
@@ -112,6 +125,20 @@
          (setq kit/org-terminal-capture-frame frame)
          (set-frame-parameter frame 'kit-org-terminal-capture t)
          (org-capture nil "P"))
+        ((or "project-todo" "project-agenda")
+         (let* ((context (json-parse-string
+                          (frame-parameter frame 'kit-org-project-context)
+                          :object-type 'alist))
+                (root (kit/org-register-project (alist-get 'root context))))
+           (setq default-directory root)
+           (if (equal action "project-todo")
+               (progn
+                 (setq kit/org-terminal-capture-frame frame)
+                 (set-frame-parameter frame 'kit-org-terminal-capture t)
+                 (org-project-capture-capture-for-current-project
+                  :capture-template "* TODO %?\n%U\n%i\n"))
+             (kit/org-project-agenda-at-root root)
+             (kit/org-terminal-enable-mode frame))))
         ("agenda"
          (org-agenda nil "a")
          (kit/org-terminal-enable-mode frame))

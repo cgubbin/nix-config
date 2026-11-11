@@ -19,6 +19,11 @@
         p.ulem
         p.dvips
         p.dvisvgm
+        p.latexmk
+        p.biblatex
+        p.lm
+        p.wrapfig
+        p.capt-of
       ]);
       commands =
         map
@@ -46,6 +51,8 @@
             "agenda"
             "notes"
             "project-capture"
+            "project-todo"
+            "project-agenda"
           ];
       doomDir = pkgs.runCommand "doom-config" { } ''
         mkdir -p "$out"
@@ -91,11 +98,16 @@
           extraPackages = epkgs: [
             epkgs.citar
             epkgs.catppuccin-theme
+            epkgs.org-project-capture
+            epkgs.org-projectile
+            epkgs.projectile
           ];
           extraBinPackages = [
             pkgs.git
             pkgs.ripgrep
             pkgs.fd
+            pkgs.biber
+            pkgs.librsvg
             tex
           ];
         };

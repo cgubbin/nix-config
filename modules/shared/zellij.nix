@@ -58,6 +58,26 @@
                       close_on_exit true
                     }
                   }
+                  bind "P" {
+                    Run "org-project-todo" {
+                      floating true
+                      x "10%"
+                      y "10%"
+                      width "80%"
+                      height "75%"
+                      close_on_exit true
+                    }
+                  }
+                  bind "A" {
+                    Run "org-project-agenda" {
+                      floating true
+                      x "10%"
+                      y "10%"
+                      width "80%"
+                      height "75%"
+                      close_on_exit true
+                    }
+                  }
                   bind "q" { Quit; }
               }
           }
