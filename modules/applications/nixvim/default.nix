@@ -5,6 +5,7 @@ in
 {
   flake.modules.homeManager."home-kit-global-tools-nixvim" =
     {
+      lib,
       ...
     }:
     {
@@ -18,6 +19,10 @@ in
 
       programs.nixvim = {
         enable = true;
+        defaultEditor = lib.mkDefault true;
+        extraConfigLuaPre = lib.mkBefore ''
+          require("kit.project").setup()
+        '';
         vimdiffAlias = true;
         impureRtp = true;
         withPython3 = true;

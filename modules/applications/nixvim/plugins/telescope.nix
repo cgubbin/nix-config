@@ -84,8 +84,13 @@ _: {
             key = "<space>en";
             action = helpers.mkRaw ''
               function()
+                local dir = vim.g.shared_editor_config_directory
+                if not dir or vim.fn.isdirectory(dir) ~= 1 then
+                  vim.notify("Configure an existing sharedEditor.configDirectory", vim.log.levels.WARN)
+                  return
+                end
                 require("kit.telescope").find_files_enhanced({
-                  cwd = vim.fn.expand("~/nix-config/home/kit/global/tools/nixvim"),
+                  cwd = dir,
                   prompt_title = "Nixvim Config";
                   hidden = true;
                 })

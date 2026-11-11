@@ -3,7 +3,7 @@ _: {
     programs.nixvim = {
       globals = {
         mapleader = "\\";
-        maplocalleader = "`";
+        maplocalleader = ",";
       };
 
       keymaps = [

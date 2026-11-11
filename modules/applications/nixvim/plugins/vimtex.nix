@@ -14,7 +14,7 @@ _: {
             quickfix_mode = 0;
           };
 
-          texlivePackage = pkgs.texlive.combined.scheme-medium;
+          texlivePackage = pkgs.texliveMedium;
           zathuraPackage = pkgs.zathura;
         };
 

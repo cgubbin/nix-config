@@ -22,21 +22,19 @@ in
           enable = true;
 
           settings = {
-            strategy = "toggleterm";
             dap = false;
+            disable_template_modules = [
+              "^overseer%.template%.just$"
+              "^overseer%.template%.cargo$"
+            ];
 
             task_list = {
               direction = "right";
               min_width = 40;
               max_width = 80;
-              default_detail = 1;
             };
 
             form = {
-              border = "rounded";
-            };
-
-            confirm = {
               border = "rounded";
             };
 
@@ -49,52 +47,54 @@ in
         keymaps = [
           {
             mode = "n";
-            key = "<leader>or";
+            key = "<leader>Or";
             action = "<cmd>OverseerRun<CR>";
             options.desc = "Run task";
           }
           {
             mode = "n";
-            key = "<leader>oo";
+            key = "<leader>Oo";
             action = "<cmd>OverseerToggle<CR>";
             options.desc = "Toggle task list";
           }
           {
             mode = "n";
-            key = "<leader>oa";
+            key = "<leader>Oa";
             action = "<cmd>OverseerQuickAction<CR>";
             options.desc = "Task action";
           }
 
           {
             mode = "n";
-            key = "<leader>ol";
+            key = "<leader>Ol";
             action = helpers.mkRaw ''
               function()
-                require("overseer").run_action(require("overseer").list_tasks()[1], "restart")
+                local tasks = require("overseer").list_tasks()
+                if not tasks[1] then
+                  vim.notify("No task to restart", vim.log.levels.INFO)
+                  return
+                end
+                require("overseer").run_action(tasks[1], "restart")
               end
             '';
             options.desc = "Restart first task";
           }
           {
             mode = "n";
-            key = "<leader>oi";
+            key = "<leader>Oi";
             action = "<cmd>OverseerInfo<cr>";
             options.desc = "Overseer info";
           }
         ];
 
+        plugins.which-key.settings.spec = [
+          {
+            __unkeyed-1 = "<leader>O";
+            group = "Tasks";
+          }
+        ];
+
         extraConfigLua = lib.mkBefore ''
-          local overseer = require("overseer")
-
-          overseer.setup({
-            strategy = "toggleterm",
-            disable_template_modules = {
-              "^overseer%.template%.just$",
-              "^overseer%.template%.cargo$",
-            },
-          })
-
           local function overseer_project_root(markers)
             local path = vim.fn.expand("%:p:h")
             if path == "" then

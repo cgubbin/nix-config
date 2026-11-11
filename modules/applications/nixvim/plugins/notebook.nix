@@ -1,6 +1,9 @@
 _: {
-  flake.modules.homeManager."home-kit-global-tools-nixvim-plugins-notebook" = _: {
+  flake.modules.homeManager."home-kit-global-tools-nixvim-plugins-notebook" = { config, lib, ... }: {
     programs.nixvim = {
+      extraPlugins = lib.optional (
+        config.sharedEditor.quartoSyncPackage != null
+      ) config.sharedEditor.quartoSyncPackage;
       plugins = {
         quarto = {
           enable = true;
@@ -32,6 +35,15 @@ _: {
           };
         };
 
+        jupytext = {
+          enable = true;
+          settings = {
+            force_ft = "markdown";
+            output_extension = "md";
+            style = "markdown";
+          };
+        };
+
         molten = {
           enable = true;
           autoLoad = true;
@@ -49,7 +61,7 @@ _: {
           enable = true;
           autoLoad = true;
           settings = {
-            backend = "kitty";
+            backend = config.sharedEditor.imageBackend;
             integrations = {
               markdown = {
                 enabled = true;
@@ -196,6 +208,7 @@ _: {
       };
 
       extraConfigLuaPre = ''
+        require("kit.jupytext_safe").install()
         require("otter.config")
         OtterConfig = vim.tbl_deep_extend("force", OtterConfig or {}, {})
         vim.cmd("packadd molten-nvim")
@@ -210,49 +223,8 @@ _: {
       '';
 
       extraConfigLua = ''
-        local default_notebook = [[
-        {
-          "cells": [
-            {
-              "cell_type": "markdown",
-              "metadata": {},
-              "source": [""]
-            }
-          ],
-          "metadata": {
-            "kernelspec": {
-              "display_name": "Python 3",
-              "language": "python",
-              "name": "python3"
-            },
-            "language_info": {
-              "codemirror_mode": { "name": "ipython" },
-              "file_extension": ".py",
-              "mimetype": "text/x-python",
-              "name": "python",
-              "nbconvert_exporter": "python",
-              "pygments_lexer": "ipython3"
-            }
-          },
-          "nbformat": 4,
-          "nbformat_minor": 5
-        }
-        ]]
-
-        local function new_notebook(filename)
-          local path = filename .. ".ipynb"
-          local file = io.open(path, "w")
-          if file then
-            file:write(default_notebook)
-            file:close()
-            vim.cmd("edit " .. vim.fn.fnameescape(path))
-          else
-            vim.notify("Could not create notebook: " .. path, vim.log.levels.ERROR)
-          end
-        end
-
         vim.api.nvim_create_user_command("NewNotebook", function(opts)
-          new_notebook(opts.args)
+          require("kit.notebook").create(opts.args)
         end, {
           nargs = 1,
           complete = "file",
@@ -263,6 +235,10 @@ _: {
           callback = function(args)
             local buf = args.buf
             local ft = vim.bo[buf].filetype
+
+            ${lib.optionalString (config.sharedEditor.quartoSyncPackage != null) ''
+              require("kit.quarto_sync").setup_buffer(buf)
+            ''}
 
             if ft == "markdown" then
               pcall(function()
@@ -309,6 +285,7 @@ _: {
             end, "Run visual range")
 
             -- Molten output controls
+            map("n", "<localleader>me", "<cmd>noautocmd MoltenExportOutput<cr>", "Molten export output")
             map("n", "<localleader>mo", "<cmd>noautocmd MoltenEnterOutput<cr>", "Molten open output")
             map("n", "<localleader>mh", "<cmd>MoltenHideOutput<cr>", "Molten hide output")
             map("n", "<localleader>md", "<cmd>MoltenDelete<cr>", "Molten delete cell")
@@ -349,6 +326,15 @@ _: {
       ];
 
       autoCmd = [
+        {
+          event = "BufWritePost";
+          pattern = [ "*.ipynb" ];
+          callback.__raw = ''
+            function()
+              pcall(vim.cmd, "MoltenExportOutput")
+            end
+          '';
+        }
         {
           event = "FileType";
           pattern = [

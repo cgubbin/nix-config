@@ -1,0 +1,308 @@
+diff --git a/flake.nix b/flake.nix
+index f00913e..4331c80 100644
+--- a/flake.nix
++++ b/flake.nix
+@@ -29,2 +29,6 @@
+     };
++    shared-nixvim = {
++      url = "github:cgubbin/nix-config/REPLACE_WITH_REVIEWED_REVISION";
++      inputs.nixpkgs.follows = "nixpkgs";
++    };
+     starter.url = "git+ssh://git@github.com/wave-photonics/nix-wsl-template.git";
+diff --git a/home/kit/nixvim/.DS_Store b/home/kit/_nixvim/.DS_Store
+similarity index 100%
+rename from home/kit/nixvim/.DS_Store
+rename to home/kit/_nixvim/.DS_Store
+diff --git a/home/kit/nixvim/after/queries/markdown/textobjects.scm b/home/kit/_nixvim/after/queries/markdown/textobjects.scm
+similarity index 100%
+rename from home/kit/nixvim/after/queries/markdown/textobjects.scm
+rename to home/kit/_nixvim/after/queries/markdown/textobjects.scm
+diff --git a/home/kit/nixvim/completion.nix b/home/kit/_nixvim/completion.nix
+similarity index 100%
+rename from home/kit/nixvim/completion.nix
+rename to home/kit/_nixvim/completion.nix
+diff --git a/home/kit/nixvim/default.nix b/home/kit/_nixvim/default.nix
+similarity index 100%
+rename from home/kit/nixvim/default.nix
+rename to home/kit/_nixvim/default.nix
+diff --git a/home/kit/nixvim/keymappings.nix b/home/kit/_nixvim/keymappings.nix
+similarity index 100%
+rename from home/kit/nixvim/keymappings.nix
+rename to home/kit/_nixvim/keymappings.nix
+diff --git a/home/kit/nixvim/lua/kit/functions/init.lua b/home/kit/_nixvim/lua/kit/functions/init.lua
+similarity index 100%
+rename from home/kit/nixvim/lua/kit/functions/init.lua
+rename to home/kit/_nixvim/lua/kit/functions/init.lua
+diff --git a/home/kit/nixvim/lua/kit/functions/utils.lua b/home/kit/_nixvim/lua/kit/functions/utils.lua
+similarity index 100%
+rename from home/kit/nixvim/lua/kit/functions/utils.lua
+rename to home/kit/_nixvim/lua/kit/functions/utils.lua
+diff --git a/home/kit/nixvim/module.nix b/home/kit/_nixvim/module.nix
+similarity index 100%
+rename from home/kit/nixvim/module.nix
+rename to home/kit/_nixvim/module.nix
+diff --git a/home/kit/nixvim/options.nix b/home/kit/_nixvim/options.nix
+similarity index 100%
+rename from home/kit/nixvim/options.nix
+rename to home/kit/_nixvim/options.nix
+diff --git a/home/kit/nixvim/plugins/alpha.nix b/home/kit/_nixvim/plugins/alpha.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/alpha.nix
+rename to home/kit/_nixvim/plugins/alpha.nix
+diff --git a/home/kit/nixvim/plugins/comment.nix b/home/kit/_nixvim/plugins/comment.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/comment.nix
+rename to home/kit/_nixvim/plugins/comment.nix
+diff --git a/home/kit/nixvim/plugins/conform.nix b/home/kit/_nixvim/plugins/conform.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/conform.nix
+rename to home/kit/_nixvim/plugins/conform.nix
+diff --git a/home/kit/nixvim/plugins/dap.nix b/home/kit/_nixvim/plugins/dap.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/dap.nix
+rename to home/kit/_nixvim/plugins/dap.nix
+diff --git a/home/kit/nixvim/plugins/default.nix b/home/kit/_nixvim/plugins/default.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/default.nix
+rename to home/kit/_nixvim/plugins/default.nix
+diff --git a/home/kit/nixvim/plugins/dressing.nix b/home/kit/_nixvim/plugins/dressing.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/dressing.nix
+rename to home/kit/_nixvim/plugins/dressing.nix
+diff --git a/home/kit/nixvim/plugins/flash.nix b/home/kit/_nixvim/plugins/flash.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/flash.nix
+rename to home/kit/_nixvim/plugins/flash.nix
+diff --git a/home/kit/nixvim/plugins/gitsigns.nix b/home/kit/_nixvim/plugins/gitsigns.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/gitsigns.nix
+rename to home/kit/_nixvim/plugins/gitsigns.nix
+diff --git a/home/kit/nixvim/plugins/harpoon.nix b/home/kit/_nixvim/plugins/harpoon.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/harpoon.nix
+rename to home/kit/_nixvim/plugins/harpoon.nix
+diff --git a/home/kit/nixvim/plugins/indent-blankline.nix b/home/kit/_nixvim/plugins/indent-blankline.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/indent-blankline.nix
+rename to home/kit/_nixvim/plugins/indent-blankline.nix
+diff --git a/home/kit/nixvim/plugins/lazy-git.nix b/home/kit/_nixvim/plugins/lazy-git.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/lazy-git.nix
+rename to home/kit/_nixvim/plugins/lazy-git.nix
+diff --git a/home/kit/nixvim/plugins/lint.nix b/home/kit/_nixvim/plugins/lint.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/lint.nix
+rename to home/kit/_nixvim/plugins/lint.nix
+diff --git a/home/kit/nixvim/plugins/lsp.nix b/home/kit/_nixvim/plugins/lsp.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/lsp.nix
+rename to home/kit/_nixvim/plugins/lsp.nix
+diff --git a/home/kit/nixvim/plugins/lualine.nix b/home/kit/_nixvim/plugins/lualine.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/lualine.nix
+rename to home/kit/_nixvim/plugins/lualine.nix
+diff --git a/home/kit/nixvim/plugins/neo-tree.nix b/home/kit/_nixvim/plugins/neo-tree.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/neo-tree.nix
+rename to home/kit/_nixvim/plugins/neo-tree.nix
+diff --git a/home/kit/nixvim/plugins/neotest/default.nix b/home/kit/_nixvim/plugins/neotest/default.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/neotest/default.nix
+rename to home/kit/_nixvim/plugins/neotest/default.nix
+diff --git a/home/kit/nixvim/plugins/notebook.nix b/home/kit/_nixvim/plugins/notebook.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/notebook.nix
+rename to home/kit/_nixvim/plugins/notebook.nix
+diff --git a/home/kit/nixvim/plugins/oil.nix b/home/kit/_nixvim/plugins/oil.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/oil.nix
+rename to home/kit/_nixvim/plugins/oil.nix
+diff --git a/home/kit/nixvim/plugins/overseer.nix.bu b/home/kit/_nixvim/plugins/overseer.nix.bu
+similarity index 100%
+rename from home/kit/nixvim/plugins/overseer.nix.bu
+rename to home/kit/_nixvim/plugins/overseer.nix.bu
+diff --git a/home/kit/nixvim/plugins/overseer/default.nix b/home/kit/_nixvim/plugins/overseer/default.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/overseer/default.nix
+rename to home/kit/_nixvim/plugins/overseer/default.nix
+diff --git a/home/kit/nixvim/plugins/overseer/python.nix b/home/kit/_nixvim/plugins/overseer/python.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/overseer/python.nix
+rename to home/kit/_nixvim/plugins/overseer/python.nix
+diff --git a/home/kit/nixvim/plugins/overseer/rust.nix b/home/kit/_nixvim/plugins/overseer/rust.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/overseer/rust.nix
+rename to home/kit/_nixvim/plugins/overseer/rust.nix
+diff --git a/home/kit/nixvim/plugins/persistence.nix b/home/kit/_nixvim/plugins/persistence.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/persistence.nix
+rename to home/kit/_nixvim/plugins/persistence.nix
+diff --git a/home/kit/nixvim/plugins/rustaceanvim.nix b/home/kit/_nixvim/plugins/rustaceanvim.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/rustaceanvim.nix
+rename to home/kit/_nixvim/plugins/rustaceanvim.nix
+diff --git a/home/kit/nixvim/plugins/snacks.nix b/home/kit/_nixvim/plugins/snacks.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/snacks.nix
+rename to home/kit/_nixvim/plugins/snacks.nix
+diff --git a/home/kit/nixvim/plugins/surround.nix b/home/kit/_nixvim/plugins/surround.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/surround.nix
+rename to home/kit/_nixvim/plugins/surround.nix
+diff --git a/home/kit/nixvim/plugins/telescope.nix b/home/kit/_nixvim/plugins/telescope.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/telescope.nix
+rename to home/kit/_nixvim/plugins/telescope.nix
+diff --git a/home/kit/nixvim/plugins/tmux-navigator.nix b/home/kit/_nixvim/plugins/tmux-navigator.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/tmux-navigator.nix
+rename to home/kit/_nixvim/plugins/tmux-navigator.nix
+diff --git a/home/kit/nixvim/plugins/todo.nix b/home/kit/_nixvim/plugins/todo.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/todo.nix
+rename to home/kit/_nixvim/plugins/todo.nix
+diff --git a/home/kit/nixvim/plugins/treesitter.nix b/home/kit/_nixvim/plugins/treesitter.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/treesitter.nix
+rename to home/kit/_nixvim/plugins/treesitter.nix
+diff --git a/home/kit/nixvim/plugins/trouble.nix b/home/kit/_nixvim/plugins/trouble.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/trouble.nix
+rename to home/kit/_nixvim/plugins/trouble.nix
+diff --git a/home/kit/nixvim/plugins/twilight.nix b/home/kit/_nixvim/plugins/twilight.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/twilight.nix
+rename to home/kit/_nixvim/plugins/twilight.nix
+diff --git a/home/kit/nixvim/plugins/typst.nix b/home/kit/_nixvim/plugins/typst.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/typst.nix
+rename to home/kit/_nixvim/plugins/typst.nix
+diff --git a/home/kit/nixvim/plugins/ufo.nix b/home/kit/_nixvim/plugins/ufo.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/ufo.nix
+rename to home/kit/_nixvim/plugins/ufo.nix
+diff --git a/home/kit/nixvim/plugins/undotree.nix b/home/kit/_nixvim/plugins/undotree.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/undotree.nix
+rename to home/kit/_nixvim/plugins/undotree.nix
+diff --git a/home/kit/nixvim/plugins/vimtex.nix b/home/kit/_nixvim/plugins/vimtex.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/vimtex.nix
+rename to home/kit/_nixvim/plugins/vimtex.nix
+diff --git a/home/kit/nixvim/plugins/which-key.nix b/home/kit/_nixvim/plugins/which-key.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/which-key.nix
+rename to home/kit/_nixvim/plugins/which-key.nix
+diff --git a/home/kit/nixvim/plugins/wrapping.nix b/home/kit/_nixvim/plugins/wrapping.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/wrapping.nix
+rename to home/kit/_nixvim/plugins/wrapping.nix
+diff --git a/home/kit/nixvim/plugins/zellij.nix b/home/kit/_nixvim/plugins/zellij.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/zellij.nix
+rename to home/kit/_nixvim/plugins/zellij.nix
+diff --git a/home/kit/nixvim/plugins/zen_mode.nix b/home/kit/_nixvim/plugins/zen_mode.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/zen_mode.nix
+rename to home/kit/_nixvim/plugins/zen_mode.nix
+diff --git a/home/kit/nixvim/python-env.nix b/home/kit/_nixvim/python-env.nix
+similarity index 100%
+rename from home/kit/nixvim/python-env.nix
+rename to home/kit/_nixvim/python-env.nix
+diff --git a/home/kit/nixvim/snippets/markdown/chem.lua b/home/kit/_nixvim/snippets/markdown/chem.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/markdown/chem.lua
+rename to home/kit/_nixvim/snippets/markdown/chem.lua
+diff --git a/home/kit/nixvim/snippets/markdown/math.lua b/home/kit/_nixvim/snippets/markdown/math.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/markdown/math.lua
+rename to home/kit/_nixvim/snippets/markdown/math.lua
+diff --git a/home/kit/nixvim/snippets/markdown/math_commands.lua b/home/kit/_nixvim/snippets/markdown/math_commands.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/markdown/math_commands.lua
+rename to home/kit/_nixvim/snippets/markdown/math_commands.lua
+diff --git a/home/kit/nixvim/snippets/markdown/utils/conditions.lua b/home/kit/_nixvim/snippets/markdown/utils/conditions.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/markdown/utils/conditions.lua
+rename to home/kit/_nixvim/snippets/markdown/utils/conditions.lua
+diff --git a/home/kit/nixvim/snippets/tex/chem.lua b/home/kit/_nixvim/snippets/tex/chem.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/tex/chem.lua
+rename to home/kit/_nixvim/snippets/tex/chem.lua
+diff --git a/home/kit/nixvim/snippets/tex/commands.lua b/home/kit/_nixvim/snippets/tex/commands.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/tex/commands.lua
+rename to home/kit/_nixvim/snippets/tex/commands.lua
+diff --git a/home/kit/nixvim/snippets/tex/delimiters.lua b/home/kit/_nixvim/snippets/tex/delimiters.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/tex/delimiters.lua
+rename to home/kit/_nixvim/snippets/tex/delimiters.lua
+diff --git a/home/kit/nixvim/snippets/tex/environments.lua b/home/kit/_nixvim/snippets/tex/environments.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/tex/environments.lua
+rename to home/kit/_nixvim/snippets/tex/environments.lua
+diff --git a/home/kit/nixvim/snippets/tex/math.lua b/home/kit/_nixvim/snippets/tex/math.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/tex/math.lua
+rename to home/kit/_nixvim/snippets/tex/math.lua
+diff --git a/home/kit/nixvim/snippets/tex/math_commands.lua b/home/kit/_nixvim/snippets/tex/math_commands.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/tex/math_commands.lua
+rename to home/kit/_nixvim/snippets/tex/math_commands.lua
+diff --git a/home/kit/nixvim/snippets/tex/utils/conditions.lua b/home/kit/_nixvim/snippets/tex/utils/conditions.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/tex/utils/conditions.lua
+rename to home/kit/_nixvim/snippets/tex/utils/conditions.lua
+diff --git a/home/kit/nixvim/snippets/tex/utils/helpers.lua b/home/kit/_nixvim/snippets/tex/utils/helpers.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/tex/utils/helpers.lua
+rename to home/kit/_nixvim/snippets/tex/utils/helpers.lua
+diff --git a/home/kit/nixvim/snippets/tex/utils/init.lua b/home/kit/_nixvim/snippets/tex/utils/init.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/tex/utils/init.lua
+rename to home/kit/_nixvim/snippets/tex/utils/init.lua
+diff --git a/home/kit/nixvim/snippets/tex/utils/scaffolding.lua b/home/kit/_nixvim/snippets/tex/utils/scaffolding.lua
+similarity index 100%
+rename from home/kit/nixvim/snippets/tex/utils/scaffolding.lua
+rename to home/kit/_nixvim/snippets/tex/utils/scaffolding.lua
+diff --git a/home/kit/nixvim/themes.nix b/home/kit/_nixvim/themes.nix
+similarity index 100%
+rename from home/kit/nixvim/themes.nix
+rename to home/kit/_nixvim/themes.nix
+diff --git a/home/kit/nixvim/plugins/claudecode.nix b/home/kit/editor-extensions/claudecode.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/claudecode.nix
+rename to home/kit/editor-extensions/claudecode.nix
+diff --git a/home/kit/nixvim/plugins/obsidian.nix b/home/kit/editor-extensions/obsidian.nix
+similarity index 100%
+rename from home/kit/nixvim/plugins/obsidian.nix
+rename to home/kit/editor-extensions/obsidian.nix
+diff --git a/modules/users/kit.nix b/modules/users/kit.nix
+index 7fbe484..123595e 100644
+--- a/modules/users/kit.nix
++++ b/modules/users/kit.nix
+@@ -2,2 +2,7 @@
+   flake-file.inputs = {
++    shared-nixvim = {
++      # Replace with the reviewed immutable producer revision before adoption.
++      url = "github:cgubbin/nix-config/REPLACE_WITH_REVIEWED_REVISION";
++      inputs.nixpkgs.follows = "nixpkgs";
++    };
+     nixvim = {
+@@ -47,2 +52,16 @@
+       inputs.starter.modules.homeManager.llm-tools
++      inputs.nixvim.homeModules.nixvim
++      inputs.shared-nixvim.modules.homeManager.shared-editor
++      ({pkgs, ...}: {
++        sharedEditor = {
++          configDirectory = "/home/kit/Repos/wsl-nix-config";
++          clipboardProvider = "xsel";
++          imageBackend = "kitty";
++          quartoSyncPackage = pkgs.vimUtils.buildVimPlugin {
++            pname = "quarto-sync-nvim";
++            version = "consumer";
++            src = inputs.quarto-sync-nvim;
++          };
++        };
++      })
+       (inputs.import-tree ../../home/kit)

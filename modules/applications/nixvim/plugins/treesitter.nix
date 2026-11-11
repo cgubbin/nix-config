@@ -11,6 +11,29 @@ _: {
       programs.nixvim = {
         plugins.treesitter = {
           enable = true;
+          grammarPackages = with config.programs.nixvim.plugins.treesitter.package.builtGrammars; [
+            bash
+            c
+            cmake
+            cpp
+            csv
+            fish
+            json
+            lua
+            markdown
+            markdown_inline
+            nix
+            nu
+            python
+            query
+            regex
+            rust
+            sql
+            toml
+            typst
+            vim
+            yaml
+          ];
           settings = {
             highlight = {
               enable = true;

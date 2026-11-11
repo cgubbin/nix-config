@@ -23,7 +23,43 @@ in
       hm."home-kit-features-cli-zoxide"
     ];
   };
-  flake.modules.homeManager.shared-editor = {
+  flake.modules.homeManager.shared-editor = { config, lib, ... }: {
     imports = [ hm."home-kit-global-tools-nixvim" ];
+    options.sharedEditor.configDirectory = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Directory searched by the editor configuration shortcut.";
+    };
+    options.sharedEditor.quartoSyncPackage = lib.mkOption {
+      type = lib.types.nullOr lib.types.package;
+      default = null;
+      description = "Optional consumer-provided quarto-sync Neovim plugin package.";
+    };
+    options.sharedEditor.clipboardProvider = lib.mkOption {
+      type = lib.types.nullOr (
+        lib.types.enum [
+          "wl-copy"
+          "xclip"
+          "xsel"
+        ]
+      );
+      default = null;
+      description = "Optional clipboard provider installed by the consumer's Nixvim package.";
+    };
+    options.sharedEditor.imageBackend = lib.mkOption {
+      type = lib.types.enum [
+        "kitty"
+        "ueberzug"
+        "sixel"
+      ];
+      default = "kitty";
+      description = "Terminal image protocol used by image.nvim.";
+    };
+    config.programs.nixvim.globals.shared_editor_config_directory = lib.mkIf (
+      config.sharedEditor.configDirectory != null
+    ) config.sharedEditor.configDirectory;
+    config.programs.nixvim.clipboard.providers = lib.optionalAttrs (
+      config.sharedEditor.clipboardProvider != null
+    ) { ${config.sharedEditor.clipboardProvider}.enable = true; };
   };
 }

@@ -3,7 +3,7 @@ let
   top = config;
 in
 {
-  flake.modules.homeManager."home-kit-global-tools" = { ... }: {
+  flake.modules.homeManager."home-kit-global-tools" = { config, ... }: {
     imports = [
       top.flake.modules.homeManager.shared-shells
       top.flake.modules.homeManager."home-kit-global-tools-emacs"
@@ -12,5 +12,6 @@ in
       top.flake.modules.homeManager."home-kit-global-tools-nixvim-plugins-obsidian"
       top.flake.modules.homeManager."home-kit-global-tools-obsidian"
     ];
+    sharedEditor.configDirectory = "${config.home.homeDirectory}/nix-config";
   };
 }

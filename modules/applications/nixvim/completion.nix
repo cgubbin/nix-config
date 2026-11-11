@@ -36,8 +36,6 @@ _: {
               path = "[path]";
               luasnip = "[snip]";
               buffer = "[buffer]";
-              neorg = "[neorg]";
-              cmp_tabby = "[tabby]";
             };
           };
 
@@ -77,10 +75,6 @@ _: {
                   name = "buffer";
                   option.get_bufnrs = helpers.mkRaw "vim.api.nvim_list_bufs";
                 }
-
-                # Keep these only if you actually have the matching source plugins enabled elsewhere.
-                { name = "cmp_tabby"; }
-                { name = "neorg"; }
               ];
             };
           };

@@ -2,6 +2,7 @@ _: {
   flake.modules.homeManager."home-kit-global-tools-nixvim-options" =
     {
       config,
+      lib,
       ...
     }:
     {
@@ -10,9 +11,18 @@ _: {
           # Lua config
           "lua/kit/functions/utils.lua".source = ./../../../assets/editor/lua/kit/functions/utils.lua;
           "lua/kit/functions/init.lua".source = ./../../../assets/editor/lua/kit/functions/init.lua;
+          "lua/kit/notebook.lua".source = ./../../../assets/editor/lua/kit/notebook.lua;
+          "lua/kit/jupytext_safe.lua".source = ./../../../assets/editor/lua/kit/jupytext_safe.lua;
+          "lua/kit/project.lua".source = ./../../../assets/editor/lua/kit/project.lua;
+          "lua/kit/project_env.lua".source = ./../../../assets/editor/lua/kit/project_env.lua;
+          "lua/kit/python.lua".source = ./../../../assets/editor/lua/kit/python.lua;
+          "lua/kit/dap_env.lua".source = ./../../../assets/editor/lua/kit/dap_env.lua;
+          "lua/kit/quarto_sync.lua".source = ./../../../assets/editor/lua/kit/quarto_sync.lua;
           # Treesitter queries
           "after/queries/ecma/textobjects.scm".source =
             ./../../../assets/editor/after/queries/ecma/textobjects.scm;
+          "after/queries/markdown/textobjects.scm".source =
+            ./../../../assets/editor/after/queries/markdown/textobjects.scm;
 
           # Markdown snippets
           "LuaSnip/markdown/utils/conditions.lua".source =
@@ -73,6 +83,7 @@ _: {
           sidescrolloff = 8;
           colorcolumn = "80";
           guicursor = "";
+          guifont = lib.mkDefault "DejaVu Sans Mono:h12";
           incsearch = true;
           nu = true;
           undodir = [ "${config.xdg.dataHome}/nvim/undo" ];

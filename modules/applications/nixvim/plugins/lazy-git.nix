@@ -9,14 +9,6 @@ _: {
         lazygit
       ];
 
-      keymaps = [
-        {
-          mode = "n";
-          key = "<leader>gg";
-          action = "<cmd>LazyGit<cr>";
-          options.desc = "Lazygit";
-        }
-      ];
     };
 
   };

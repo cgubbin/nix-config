@@ -33,7 +33,12 @@ _: {
                 stopOnEntry = false;
                 initCommands = helpers.mkRaw ''
                   function()
-                    local rustc_sysroot = vim.fn.trim(vim.fn.system("rustc --print sysroot"))
+                    local root = require("kit.project").root()
+                    local rustc_sysroot = vim.fn.trim(vim.fn.system({ "direnv", "exec", root, "rustc", "--print", "sysroot" }))
+                    if vim.v.shell_error ~= 0 then
+                      vim.notify("Could not resolve the project's Rust sysroot", vim.log.levels.ERROR)
+                      return {}
+                    end
 
                     local script_import =
                       'command script import "' .. rustc_sysroot .. '/lib/rustlib/etc/lldb_lookup.py"'
@@ -94,12 +99,22 @@ _: {
                 args = [ ];
               }
             ];
+            python = [
+              {
+                type = "python";
+                request = "launch";
+                name = "Launch file";
+                program = "\${file}";
+                cwd = helpers.mkRaw ''function() return require("kit.project").root() end'';
+              }
+            ];
           };
         };
 
         extraPlugins = with pkgs.vimPlugins; [
           nvim-dap-ui
           nvim-nio
+          nvim-dap-python
         ];
 
         extraPackages = with pkgs; [
@@ -114,17 +129,12 @@ _: {
 
           dap.set_log_level("INFO")
 
-          dap.adapters.gdb = {
-            type = "executable",
-            command = vim.fn.exepath("gdb"),
-            args = { "--interpreter=dap", "--eval-command", "set print pretty on" },
-          }
-
-          dap.adapters.lldb = {
-            type = "executable",
-            command = vim.fn.exepath("lldb-dap"),
-            name = "lldb",
-          }
+          local project_adapter = require("kit.dap_env").adapter
+          dap.adapters.gdb = project_adapter(vim.fn.exepath("gdb"), { "--interpreter=dap", "--eval-command", "set print pretty on" }, false)
+          dap.adapters.lldb = project_adapter(vim.fn.exepath("lldb-dap"), {}, false)
+          dap.adapters.python = project_adapter("${
+            pkgs.python3.withPackages (ps: [ ps.debugpy ])
+          }/bin/python", { "-m", "debugpy.adapter" }, true)
 
           dapui.setup({
             icons = { expanded = "▾", collapsed = "▸" },

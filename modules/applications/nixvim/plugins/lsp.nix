@@ -54,6 +54,7 @@ _: {
               yamlls.enable = true;
               clangd.enable = true;
               cmake.enable = true;
+              nushell.enable = true;
             };
           };
 
@@ -61,12 +62,6 @@ _: {
             enable = true;
             autoLoad = true;
             autoEnableSources = true;
-            settings.sources = [
-              { name = "nvim_lsp"; }
-              { name = "path"; }
-              { name = "buffer"; }
-              { name = "luasnip"; }
-            ];
           };
         };
 

@@ -1,0 +1,62 @@
+--- a/lua/neotest-rust/init.lua
++++ b/lua/neotest-rust/init.lua
+@@ -12,25 +12,19 @@
+ 
+ local adapter = { name = "neotest-rust" }
+ 
+-local cargo_metadata = setmetatable({}, {
+-    __call = function(self, cwd)
+-        local metadata = self[cwd]
+-        if metadata ~= nil then
+-            return metadata
+-        else
+-            Job:new({
+-                command = "cargo",
+-                args = { "metadata", "--no-deps" },
+-                cwd = cwd,
+-                on_exit = function(j, return_val)
+-                    metadata = vim.json.decode(j:result()[1])
+-                end,
+-            }):sync()
+-            self[cwd] = metadata
+-            return metadata
+-        end
+-    end,
+-})
++local function cargo_metadata(cwd)
++    if vim.in_fast_event() then require("nio").scheduler() end
++    local job = Job:new({
++        command = "direnv",
++        args = { "exec", cwd, "cargo", "metadata", "--no-deps" },
++        cwd = cwd,
++    })
++    local result = job:sync()
++    if job.code ~= 0 then
++        error("cargo metadata failed in project environment: " .. table.concat(job:stderr_result(), "\n"))
++    end
++    return vim.json.decode(table.concat(result, "\n"))
++end
+ 
+ ---Find the project root directory given a current directory to work from.
+ ---Should no root be found, the adapter can still be used in a non-project context if a test file matches.
+--- a/lua/neotest-rust/dap.lua
++++ b/lua/neotest-rust/dap.lua
+@@ -22,6 +22,9 @@
+     local exe_filter = '"executable":"(.+' .. sep .. "deps" .. sep .. '.+)",'
+ 
+     local cmd = {
++        "direnv",
++        "exec",
++        root,
+         "cargo",
+         "test",
+         "--manifest-path=" .. root .. sep .. "Cargo.toml",
+@@ -29,7 +32,7 @@
+         "--no-run",
+         "--quiet",
+     }
+-    local handle = assert(io.popen(table.concat(cmd, " ")))
++    local handle = assert(io.popen(table.concat(vim.tbl_map(vim.fn.shellescape, cmd), " ")))
+     local line = handle:read("l")
+ 
+     while line do

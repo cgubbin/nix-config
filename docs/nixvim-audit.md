@@ -1,0 +1,34 @@
+# Nixvim audit
+
+This records the current state of the shared-editor migration. “Pending” means
+the integrated behavior has not been verified; helper-unit tests alone do not
+establish that Neotest, DAP or LSP use them.
+
+| Finding | Severity and evidence | Disposition and verification |
+| --- | --- | --- |
+| Project environment leakage | High: the previous Neotest configuration imported direnv output into global `vim.env` without processing removals. Switching projects could retain prior variables. | **Improved:** subprocesses use project-scoped environments, with removals and concurrent loads handled. Headless tests exercise approved and unapproved environments, refresh and Python A/B/A test and debug runs. Existing LSP processes must be restarted after `:ProjectEnvRefresh`. |
+| Notebook and Markdown overwrite | High: work's `NewNotebook` overwrote notebooks, and its pinned Jupytext plugin overwrote a same-name Markdown file on save. | **Fixed in shared editor:** notebook replacement asks for confirmation; Jupytext uses private temporary conversion files. Both consumer pins passed headless existing-sibling, repeated-save and unload tests. Paired Markdown files are intentionally not used. |
+| Work clipboard setting | Medium: work's generated `opts.clipboard` was a structured provider object; a headless Neovim check left the register empty. | **Fixed in shared editor:** the register remains `unnamedplus`, and `sharedEditor.clipboardProvider` selects a Nixvim provider. Fixture evaluation passed; real terminal clipboard remains unverified. |
+| Overseer setup and bindings | Medium: work's generated configuration initialized Overseer repeatedly; task bindings conflicted with vault bindings. Neither pinned Overseer version provides its configured toggleterm strategy. | **Fixed in shared editor:** one setup uses the supported default runner, Overseer uses `<leader>O`, and an empty restart reports a message. Both pins passed headless successful and failed task checks without toggleterm. |
+| Completion sources | Medium: both work source modules declared sources; Tabby and Neorg were named without corresponding installed sources. | **Fixed in shared editor:** LuaSnip, LSP, path and buffer are configured once, with all four plugins enabled in both fixture evaluations. |
+| Stale configuration shortcut | Medium: Telescope pointed to a retired personal path. | **Fixed in shared editor:** `sharedEditor.configDirectory` belongs to the consumer and missing paths produce a message. Fixture values evaluated separately; interactive navigation remains unverified. |
+| Python debugging and testing | High: the previous DAP configuration lacked the work Python adapter, and Neotest selected a different interpreter. Work's resolver also logged project paths to a fixed `/tmp` file and always passed an xdist-only flag. | **Fixed:** DAP and Neotest share project-aware resolution; real pytest-only and debugpy launches pass in disposable projects on the stable inputs. Project environments must provide pytest and any project-specific packages. Pixi discovery is bounded and offline. |
+| Rust test adapter | High: the pinned `neotest-rust` adapter invokes `cargo metadata` directly before it returns a test specification, requires `cargo nextest` for normal test runs, and constructed a shell command for debug builds with an unquoted manifest path. That could fail for paths containing spaces and interpret shell metacharacters. | **Improved:** discovery, test and debug-build commands use the approved project environment, with shell-escaped debug arguments. A disposable project with shell metacharacters in its path passes discovery, test execution and debug-binary preparation on both pins. Supply `cargo-nextest` and the Rust toolchain in the project environment; an interactive Rust debug session remains to be checked. |
+| Neotest subprocess | Low: in the headless Nix-built fixture Neotest logs that its optional discovery subprocess cannot load `nvim-treesitter`; it falls back to in-process parsing and Python and Rust test execution still pass. | **Investigate on host:** check the Neotest log and startup performance in the actual editor. The fixtures do not establish whether this also occurs interactively. |
+| Python diagnostics | Low: `plugins/lsp.nix` enables both Ruff and Pyright; `plugins/lint.nix` separately runs Ruff, and Conform formats with Ruff. | **Assess in a real project:** compare diagnostics for duplicates and disable one reporting path if necessary. Keep type checking and formatting distinct; no project-specific linter is required globally merely because an example uses it. |
+| Notebook rendering and remote images | Medium: `plugins/notebook.nix` enables remote image downloads and defaults to Kitty image protocol while Molten's image provider is `none`. A terminal may not support the selected protocol. | **Consumer choice / real-session check:** select `sharedEditor.imageBackend` deliberately, and consider remote image access when opening documents. Test image rendering, kernel execution and browser preview in the actual terminal; the work-like preview stub is not the private service. |
+| Parser and tool coverage | Low: work listed query and Typst in `ensure_installed` without including them in its explicit grammar package list. Optional runtimes, kernels and project tools vary. | **Improved:** both grammars are included with the work package list. Verify a project's language server, formatter, debugger and kernel rather than assuming every tool should be installed globally. |
+| Input compatibility | Medium: the stable and work-pinned fixtures differ in nixpkgs and Nixvim. The work-pinned fixture produces fzf rename/history-binding warnings. The older TeX package name also produced a deprecation warning. | **Partly improved:** the shared editor uses work's `texliveMedium`, available on both pins. Complete both consumer checks and host build without changing pins; track unrelated fzf warnings when updating inputs. |
+
+For a health check in the built editor, start with `:checkhealth`, then inspect
+`:checkhealth vim.lsp`, `:checkhealth provider` and `:ConformInfo`. Check the
+active language servers with `:LspInfo`, available debugger adapters with
+`:lua print(vim.inspect(require('dap').adapters))`, and installed kernels with
+`jupyter kernelspec list` in the project environment. Parser, terminal and
+kernel availability should also be exercised using a representative file;
+configuration evaluation alone is not a runtime test.
+
+The isolated Jupytext conversion uses the pinned plugin's
+`jupytext.utils.get_jupytext_file` hook. The consumer headless checks exercise
+the actual plugin on both pinned versions; rerun them when upgrading Jupytext
+because a change to that internal hook could bypass the protection.

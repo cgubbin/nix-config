@@ -101,7 +101,7 @@ _: {
         # Preview
         {
           mode = "n";
-          key = "<leader>hp";
+          key = "<leader>hP";
           action = "<cmd>Gitsigns preview_hunk<CR>";
           options.desc = "Preview hunk";
         }

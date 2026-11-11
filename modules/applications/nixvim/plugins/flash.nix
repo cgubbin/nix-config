@@ -64,6 +64,22 @@ _: {
           }
           {
             mode = [
+              "n"
+              "x"
+              "o"
+            ];
+            key = "<C-space>";
+            action = helpers.mkRaw ''
+              function()
+                require("flash").treesitter({
+                  actions = { ["<c-space>"] = "next", ["<BS>"] = "prev" },
+                })
+              end
+            '';
+            options.desc = "Flash Treesitter Incremental";
+          }
+          {
+            mode = [
               "o"
               "x"
             ];
