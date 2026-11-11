@@ -30,6 +30,10 @@ local function make_project(name, removed)
 end
 local a = make_project("A", true)
 local b = make_project("B", false)
+local selected = require("kit.python_env")
+for _, project in ipairs({ a, b }) do
+  selected.set(project.root, { kind = "venv", path = project.root .. "/.venv", label = "test .venv" })
+end
 local neotest = require("neotest")
 local function run(project, expected)
   vim.fn.chdir(project.root)

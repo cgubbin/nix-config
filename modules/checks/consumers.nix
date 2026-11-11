@@ -109,6 +109,8 @@ let
       {
         nativeBuildInputs = [
           consumer.pkgs.direnv
+          consumer.pkgs.just
+          consumer.pkgs.python3Packages.nox
           consumer.pkgs.cargo
           consumer.pkgs.cargo-nextest
           consumer.pkgs.rustc
@@ -130,6 +132,9 @@ let
           ${links}
           ${runTest ../../tests/nixvim-composition.lua}
           ${runTest ../../tests/nixvim-overseer.lua}
+          ${runTest ../../tests/nixvim-just.lua}
+          ${runTest ../../tests/nixvim-python-env.lua}
+          ${runTest ../../tests/nixvim-python-tools.lua}
           ${runTest ../../tests/nixvim-jupytext-safe.lua}
           ${runTest ../../tests/nixvim-rust-adapter.lua}
         ${runTest ../../tests/nixvim-neotest-project.lua}

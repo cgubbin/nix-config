@@ -24,6 +24,18 @@ _: {
             };
 
             formatters = {
+              ruff_format = {
+                command = "direnv";
+                prepend_args = helpers.mkRaw ''
+                  function(_, ctx)
+                    local project = require("kit.project")
+                    local root = project.root(vim.api.nvim_buf_get_name(ctx.buf))
+                    local command = project.command(root, { project.python_tool(root, "ruff") }, "ruff")
+                    table.remove(command, 1)
+                    return command
+                  end
+                '';
+              };
               typstyle = {
                 command = "${pkgs.typstyle}/bin/typstyle";
                 args = [

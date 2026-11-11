@@ -19,8 +19,9 @@ assert(python.resolve(dir, { PATH = env.PATH, VIRTUAL_ENV = dir .. "/other-env" 
 assert(python.resolve(dir, { PATH = env.PATH, VIRTUAL_ENV = dir .. "/missing-env" }) == venv)
 local old_system = vim.system
 local calls = 0
-vim.system = function(_, _, callback)
+vim.system = function(command, _, callback)
   calls = calls + 1
+  assert(vim.tbl_contains(command, "--frozen") and vim.tbl_contains(command, "--no-install"), "Pixi discovery must not mutate the lockfile or install an environment")
   callback({ code = 0, stdout = fallback .. "\n" })
   return { kill = function() end }
 end
@@ -31,17 +32,22 @@ assert(python.resolve(dir, env) == venv and calls == 0)
 vim.fn.writefile({ "[tool.pixi.project]" }, dir .. "/pyproject.toml")
 assert(python.resolve(dir, env) == fallback and calls == 1)
 vim.system = function(_, _, callback) callback({ code = 124 }); return { kill = function() end } end
-assert(python.resolve(dir, env) == venv)
+local unavailable, reason = python.resolve(dir, env)
+assert(not unavailable and reason:find("Pixi Python is unavailable"))
 vim.system = old_system
 local sleep = vim.fn.exepath("sleep")
 assert(sleep ~= "", "sleep is required for the timeout check")
 vim.fn.writefile({ "#!/bin/sh", vim.fn.shellescape(sleep) .. " 4" }, dir .. "/bin/pixi")
 local start = uv.hrtime()
-assert(python.resolve(dir, env) == venv)
+assert(python.resolve(dir, env) == nil)
 assert((uv.hrtime() - start) / 1e9 < 3, "slow Pixi did not time out")
 vim.system = function(_, _, callback) callback({ code = 124 }); return { kill = function() end } end
 vim.fn.delete(venv)
-assert(python.resolve(dir, env) == fallback)
+assert(python.resolve(dir, env) == nil)
+vim.fn.writefile({ "[project]" }, dir .. "/pyproject.toml")
+vim.fn.writefile({}, dir .. "/uv.lock")
+local missing_uv, uv_error = python.resolve(dir, env)
+assert(not missing_uv and uv_error:find("uv project environment is missing"))
 vim.fn.delete(fallback)
 local missing, err = python.resolve(dir, { PATH = "" })
 assert(not missing and err)

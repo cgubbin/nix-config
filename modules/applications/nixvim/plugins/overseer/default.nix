@@ -1,8 +1,4 @@
-{ config, ... }:
-let
-  top = config;
-in
-{
+_: {
   flake.modules.homeManager."home-kit-global-tools-nixvim-plugins-overseer" =
     {
       config,
@@ -13,10 +9,6 @@ in
       helpers = config.lib.nixvim;
     in
     {
-      imports = [
-        top.flake.modules.homeManager."home-kit-global-tools-nixvim-plugins-overseer-python"
-        top.flake.modules.homeManager."home-kit-global-tools-nixvim-plugins-overseer-rust"
-      ];
       programs.nixvim = {
         plugins.overseer = {
           enable = true;
@@ -48,8 +40,8 @@ in
           {
             mode = "n";
             key = "<leader>Or";
-            action = "<cmd>OverseerRun<CR>";
-            options.desc = "Run task";
+            action = helpers.mkRaw ''function() require("kit.just").pick() end'';
+            options.desc = "Run Just recipe";
           }
           {
             mode = "n";

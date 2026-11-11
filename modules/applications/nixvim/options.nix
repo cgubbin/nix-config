@@ -14,8 +14,10 @@ _: {
           "lua/kit/notebook.lua".source = ./../../../assets/editor/lua/kit/notebook.lua;
           "lua/kit/jupytext_safe.lua".source = ./../../../assets/editor/lua/kit/jupytext_safe.lua;
           "lua/kit/project.lua".source = ./../../../assets/editor/lua/kit/project.lua;
+          "lua/kit/just.lua".source = ./../../../assets/editor/lua/kit/just.lua;
           "lua/kit/project_env.lua".source = ./../../../assets/editor/lua/kit/project_env.lua;
           "lua/kit/python.lua".source = ./../../../assets/editor/lua/kit/python.lua;
+          "lua/kit/python_env.lua".source = ./../../../assets/editor/lua/kit/python_env.lua;
           "lua/kit/dap_env.lua".source = ./../../../assets/editor/lua/kit/dap_env.lua;
           "lua/kit/quarto_sync.lua".source = ./../../../assets/editor/lua/kit/quarto_sync.lua;
           # Treesitter queries

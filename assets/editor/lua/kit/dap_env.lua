@@ -1,5 +1,4 @@
 local M = {}
-local envs = require("kit.project_env")
 local project = require("kit.project")
 local python = require("kit.python")
 
@@ -12,7 +11,7 @@ end
 function M.adapter(command, args, is_python)
   return function(callback, config)
     local root = project.root(config.cwd)
-    envs.load(root, function(env, err)
+    project.load_env(root, function(env, err)
       if not env then
         vim.notify("Cannot start debugger: " .. tostring(err), vim.log.levels.ERROR)
         return

@@ -14,7 +14,6 @@ _: {
           enable = true;
 
           lintersByFt = {
-            python = [ "ruff" ];
             yaml = [ "yamllint" ];
             sql = [ "sqlfluff" ];
           };

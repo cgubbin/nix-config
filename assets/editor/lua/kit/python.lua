@@ -31,10 +31,11 @@ function M.resolve(root, env)
   end
   local manifest = pixi_manifest(root)
   local pixi = manifest and find_executable("pixi", env)
+  if manifest and not pixi then return nil, "Pixi is unavailable for " .. root end
   if pixi then
     local result
     local ok, process = pcall(vim.system,
-      { pixi, "run", "--frozen", "--offline", "--manifest-path", manifest, "which", "python" },
+      { pixi, "run", "--frozen", "--no-install", "--offline", "--manifest-path", manifest, "which", "python" },
       { cwd = root, env = env, clear_env = true, text = true },
       function(value) result = value end)
     if ok and not vim.wait(1500, function() return result ~= nil end, 10) then
@@ -42,9 +43,11 @@ function M.resolve(root, env)
     end
     local path = result and result.code == 0 and vim.trim(result.stdout or "") or nil
     if executable(path) then return path end
+    return nil, "Pixi Python is unavailable; prepare or select a project environment for " .. root
   end
   local venv = root .. "/.venv/bin/python"
   if executable(venv) then return venv end
+  if uv.fs_stat(root .. "/uv.lock") then return nil, "The uv project environment is missing for " .. root end
   local python = find_executable("python3", env) or find_executable("python", env)
   if python then return python end
   return nil, "No executable Python found for " .. root
