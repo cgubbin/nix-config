@@ -1,0 +1,27 @@
+;;; startup.el -*- lexical-binding: t; -*-
+(unless (and (boundp 'doom-profile) doom-profile)
+  (error "Doom profile did not load"))
+(unless (bound-and-true-p evil-mode)
+  (error "Evil mode did not start"))
+(unless (fboundp 'which-key-mode)
+  (error "Which-key is unavailable"))
+(unless (and (fboundp '+dashboard/open) (fboundp '+dashboard-draw-ascii-banner-fn))
+  (error "Doom dashboard or terminal banner unavailable"))
+(with-current-buffer (doom-fallback-buffer)
+  (+dashboard-reload t)
+  (dolist (label '("Capture a thought" "Open agenda" "Find a knowledge note" "Open today's journal"))
+    (unless (string-match-p (regexp-quote label) (buffer-string))
+      (error "Dashboard label missing: %s" label))))
+(setq org-directory (expand-file-name "notes" (getenv "HOME")))
+(require 'org)
+(unless org-confirm-babel-evaluate
+  (error "Babel confirmation is disabled"))
+(with-temp-buffer
+  (org-mode)
+  (insert "* TODO Startup smoke test\n")
+  (goto-char (point-min))
+  (unless (equal (org-get-todo-state) "TODO")
+    (error "Org editing is unavailable")))
+(load (expand-file-name "knowledge.el" (file-name-directory (or load-file-name buffer-file-name))) nil nil t)
+(load (expand-file-name "science.el" (file-name-directory (or load-file-name buffer-file-name))) nil nil t)
+t

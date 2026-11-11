@@ -16,7 +16,13 @@ in
     imports = [
       top.flake.modules.homeManager."home-kit-features"
       top.flake.modules.homeManager."home-kit-global"
+      top.flake.modules.homeManager.shared-doom-emacs
     ];
+
+    knowledge = {
+      orgDirectory = "/home/kit/notes/personal";
+      enableGraphicalIntegration = true;
+    };
 
     home-config = {
       desktop = {

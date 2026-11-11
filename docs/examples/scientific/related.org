@@ -1,0 +1,6 @@
+:PROPERTIES:
+:ID: 4e416ea0-dcf1-4bb6-bc8e-5d953292119a
+:END:
+#+title: Waveguide propagation
+
+For a uniform guide the propagation constant determines accumulated phase.
