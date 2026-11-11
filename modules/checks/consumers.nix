@@ -110,6 +110,7 @@ let
         nativeBuildInputs = [
           consumer.pkgs.direnv
           consumer.pkgs.just
+          consumer.pkgs.git
           consumer.pkgs.python3Packages.nox
           consumer.pkgs.cargo
           consumer.pkgs.cargo-nextest
@@ -131,6 +132,8 @@ let
           mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME/nvim" "$XDG_STATE_HOME/nvim" "$XDG_CACHE_HOME/nvim" "$NIXVIM_TEST_DIR"
           ${links}
           ${runTest ../../tests/nixvim-composition.lua}
+          ${runTest ../../tests/nixvim-git.lua}
+          ${runTest ../../tests/nixvim-symbols.lua}
           ${runTest ../../tests/nixvim-overseer.lua}
           ${runTest ../../tests/nixvim-just.lua}
           ${runTest ../../tests/nixvim-python-env.lua}

@@ -12,6 +12,11 @@ _: {
       programs.nixvim = {
         plugins = {
           web-devicons.enable = true;
+          diffview.enable = true;
+          octo = {
+            enable = true;
+            settings.picker = "telescope";
+          };
 
           telescope = {
             enable = true;
@@ -71,6 +76,7 @@ _: {
         extraPackages = with pkgs; [
           ripgrep
           fd
+          gh
         ];
 
         extraConfigLua = ''
@@ -79,6 +85,30 @@ _: {
         '';
 
         keymaps = [
+          {
+            mode = "n";
+            key = "<leader>gP";
+            action = "<cmd>Octo pr list<CR>";
+            options.desc = "GitHub pull requests";
+          }
+          {
+            mode = "n";
+            key = "<leader>gd";
+            action = "<cmd>DiffviewOpen<CR>";
+            options.desc = "Review working tree and conflicts";
+          }
+          {
+            mode = "n";
+            key = "<leader>gD";
+            action = "<cmd>DiffviewClose<CR>";
+            options.desc = "Close diff view";
+          }
+          {
+            mode = "n";
+            key = "<leader>gH";
+            action = "<cmd>DiffviewFileHistory %<CR>";
+            options.desc = "Current file history";
+          }
           {
             mode = "n";
             key = "<space>en";
@@ -276,14 +306,14 @@ _: {
         local function see_commit_changes_in_diffview(prompt_bufnr)
           local value = selected_value(prompt_bufnr)
           if value then
-            vim.cmd("DiffviewOpen " .. value .. "~1.." .. value)
+            vim.api.nvim_cmd({ cmd = "DiffviewOpen", args = { value .. "^!" } }, {})
           end
         end
 
         local function compare_with_current_branch_in_diffview(prompt_bufnr)
           local value = selected_value(prompt_bufnr)
           if value then
-            vim.cmd("DiffviewOpen " .. value)
+            vim.api.nvim_cmd({ cmd = "DiffviewOpen", args = { value } }, {})
           end
         end
 

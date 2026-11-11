@@ -48,7 +48,7 @@ _: {
           };
         }
         {
-          action = ":resize -2<CR>";
+          action = ":vertical resize -2<CR>";
           key = "<C-Right>";
           mode = [ "n" ];
           options = {
@@ -148,7 +148,7 @@ _: {
           };
         }
         {
-          action = "vim.lsp.buf.format";
+          action = "<cmd>lua require('conform').format({ async = true, lsp_format = 'fallback' })<CR>";
           key = "<leader>f";
           mode = [ "n" ];
           options = {
@@ -158,7 +158,7 @@ _: {
           };
         }
         {
-          action = "+y";
+          action = ''"+y'';
           key = "<leader>y";
           mode = [
             "n"
@@ -171,7 +171,7 @@ _: {
           };
         }
         {
-          action = "+Y";
+          action = ''"+Y'';
           key = "<leader>Y";
           mode = [
             "n"
@@ -184,7 +184,7 @@ _: {
           };
         }
         {
-          action = "_d";
+          action = ''"_d'';
           key = "<leader>d";
           mode = [
             "n"

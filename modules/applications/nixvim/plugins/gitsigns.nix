@@ -74,6 +74,18 @@ _: {
           options.desc = "Stage hunk";
         }
         {
+          mode = "v";
+          key = "<leader>hs";
+          action = ":Gitsigns stage_hunk<CR>";
+          options.desc = "Stage selected lines";
+        }
+        {
+          mode = "v";
+          key = "<leader>hr";
+          action = ":Gitsigns reset_hunk<CR>";
+          options.desc = "Reset selected lines";
+        }
+        {
           mode = "n";
           key = "<leader>hr";
           action = "<cmd>Gitsigns reset_hunk<CR>";

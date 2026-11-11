@@ -1,10 +1,23 @@
 _: {
   flake.modules.homeManager."home-kit-global-tools-nixvim-plugins-lualine" = _: {
+    programs.nixvim.plugins.aerial.enable = true;
+    programs.nixvim.plugins.navic = {
+      enable = true;
+      settings.lsp.auto_attach = true;
+    };
+    programs.nixvim.keymaps = [
+      {
+        mode = "n";
+        key = "<leader>cO";
+        action = "<cmd>AerialToggle<CR>";
+        options.desc = "Toggle code outline";
+      }
+    ];
     programs.nixvim.plugins.lualine = {
       enable = true;
       settings = {
         options = {
-          icons-enabled = true;
+          icons_enabled = true;
           theme = "tokyonight";
           disabled_filetypes = {
             __unkeyed-1 = "startify";
@@ -39,7 +52,7 @@ _: {
                   function()
                       local msg = ""
                       local buf_ft = vim.api.nvim_buf_get_option(0, 'filetype')
-                      local clients = vim.lsp.get_clients()
+                      local clients = vim.lsp.get_clients({ bufnr = 0 })
                       if next(clients) == nil then
                           return msg
                       end

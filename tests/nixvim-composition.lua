@@ -11,6 +11,8 @@ end
 for _, lhs in ipairs({ "<leader>hp", "<leader>hP", "<leader>tn", "<leader>td" }) do
   assert(vim.fn.maparg(lhs, "n") ~= "", "missing expected mapping: " .. lhs)
 end
+assert(vim.fn.maparg(vim.g.mapleader .. "y", "n") == '"+y', "clipboard yank mapping is invalid")
+assert(vim.fn.maparg(vim.g.mapleader .. "d", "n") == '"_d', "black-hole delete mapping is invalid")
 
 seen = {}
 for _, autocmd in ipairs(vim.api.nvim_get_autocmds({})) do

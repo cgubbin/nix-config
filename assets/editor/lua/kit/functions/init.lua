@@ -91,7 +91,7 @@ return {
 		return output
 	end,
 	stash = function(name)
-		vim.fn.system("git stash -u -m " .. name)
+		vim.fn.system({ "git", "stash", "push", "-u", "-m", name })
 	end,
 	buf_only = function()
 		local option = vim.api.nvim_buf_get_option
