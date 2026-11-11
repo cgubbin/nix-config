@@ -11,41 +11,64 @@ Kitsune uses `/home/kit/notes/personal`. This feature configures no note sync.
 to false for consumers and is enabled explicitly on Kitsune. With the daemon
 disabled, ordinary Doom editing remains available; launch helpers and shortcuts
 are omitted. The feature never changes EDITOR or VISUAL away from Neovim.
+Emacs and Zellij use Catppuccin Mocha; the Emacs theme package is built into
+the profile through Nix.
 
 ## Daemon and quick entry
 
 ```sh
-org-capture       # template menu in a small frame
+org-capture       # template menu in this terminal
 org-capture t     # go directly to the TODO template
+org-project-capture [file [line]] # capture an engineering note with Git context
+org-project-todo  # capture a TODO for the Git project in the current directory
+org-project-agenda # show only that project's TODOs
 org-agenda
 org-notes
 systemctl --user start emacs
-emacsclient -c
-emacsclient -n -c "$HOME/notes/personal/inbox.org"
+emacsclient -t
+emacsclient -t "$HOME/notes/personal/inbox.org"
 systemctl --user restart emacs
 journalctl --user -u emacs.service -b
 ```
 
-The three launch helpers start the one managed daemon on demand. Closing a
-frame preserves it. Restarting the service closes its buffers, so save first;
-Home Manager deliberately avoids restarting it automatically on config changes.
-Use `C-c C-c` to finish a capture or `C-c C-k` to cancel. Doom closes the
-dedicated capture frame after either operation; ordinary frames remain open.
+On consumers with graphical integration disabled (including the work WSL
+profile), the three launch helpers start the managed daemon on demand and open
+an interactive text frame in the current terminal. Press `q` to leave the
+agenda or notes client. Use `C-c C-c` to finish a capture or `C-c C-k` to
+cancel; either returns to the shell. Closing a client preserves the daemon.
+`emacsclient -c` requests a graphical frame; use `emacsclient -t` for terminal
+editing. Restarting the service closes its buffers, so save first. Home Manager
+does not restart it automatically on configuration changes.
+
+Inside the managed Zellij configuration, use `Ctrl-b e` for capture, `Ctrl-b a`
+for the agenda, or `Ctrl-b r` for Org-roam notes. Each opens in a centered
+floating pane; completing capture or pressing `q` closes the pane and returns
+focus to the prior layout. Running `org-capture`, `org-agenda`, or `org-notes`
+directly from a shell continues to use that terminal inline.
+Use `Ctrl-b P` to capture a TODO for the Git project at the current shell's
+working directory and `Ctrl-b A` for that project's agenda. `org-project-todo`
+and `org-project-agenda` are also available directly from any shell inside the
+worktree. They fail with a short message when run outside Git; they never guess
+from the daemon's current buffer.
+
+Kitsune enables graphical integration, so its launch helpers continue to use
+graphical frames and the desktop bindings below.
 
 Kitsune shortcuts: **Super+Shift+O** opens capture and **Super+Shift+A** opens
 the agenda. They are conditional on graphical and daemon integration, and were
 checked against the existing bindings. UWSM starts/stops the daemon with
 `graphical-session.target`. These shortcuts do not affect Neovim state.
 
-## WSLg consumer and diagnosis
+## Work WSL terminal client
 
 Use the same feature with your own `knowledge.orgDirectory` and keep
-`knowledge.enableGraphicalIntegration = false`. Launch from a WSL shell that
-has WSLg's DISPLAY/WAYLAND_DISPLAY values. Helpers resolve a live Wayland socket
-from XDG_RUNTIME_DIR, or the WSLg runtime directory when WSL_INTEROP is present;
-they refresh an already-running daemon's GUI environment too. They do not
-replace XDG_RUNTIME_DIR or hard-code DISPLAY=:0. Missing graphics fails with a
-diagnostic instead of spawning another daemon.
+`knowledge.enableGraphicalIntegration = false`. The daemon and Org workflows
+run entirely in the terminal and do not require WSLg, DISPLAY, or
+WAYLAND_DISPLAY. The systemd service clears inherited graphical environment
+variables in this mode, so stale WSLg values cannot prevent daemon startup.
+Run `org-agenda`, `org-capture`, or `org-notes` from the WSL
+shell; each command returns to the shell when its client is closed. A graphical
+frame is not available in this mode; use `emacsclient -t` for direct editing.
 
 A Windows shortcut can target this command (adjust distribution and username):
 
@@ -58,12 +81,10 @@ machine (`command -v org-capture`); configurations using per-user system package
 can expose a different path. The separate work repository must explicitly
 adopt and pin the feature before this command is available there.
 
-If a frame fails, inspect `systemctl --user status emacs` and its journal, then
-check `printf '%s\n' "$DISPLAY" "$WAYLAND_DISPLAY" "$XDG_RUNTIME_DIR"` and
-whether the Wayland socket exists. Start with the launch helpers to refresh
-session graphics; direct `emacsclient -c` expects the service to be running.
-Do not run `emacs --daemon` alongside the systemd service. Real WSLg restart
-behaviour and Windows focus return require manual testing on that host.
+If a client fails, inspect `systemctl --user status emacs` and
+`journalctl --user -u emacs.service -b`. Do not run `emacs --daemon` alongside
+the systemd service. Windows can launch a WSL terminal command through a
+shortcut, but the shortcut itself is managed on Windows.
 
 ## Build before activation
 
@@ -128,6 +149,8 @@ under XDG directories; these are distinct from the repository and note contents.
 | c | roam/ | Scientific concept with stable ID and references section |
 | e | roam/ | Engineering investigation: question, evidence, next steps |
 | m | journal/meetings.org | Dated meeting entry and actions |
+| p | private projects/<git-common-dir-hash>/tasks.org | Project-local TODO entry, included in the global agenda |
+| P | roam/ | Engineering note with repository, branch, commit, and optional file/line |
 
 For concept/investigation captures, enter the title at the initial cursor,
 then fill the sections as needed. Use `C-c C-c` to finish and `C-c C-k` to abort.
@@ -142,6 +165,42 @@ backlinks and daily navigation commands. Use `M-x org-roam-node-insert` to link 
 concept and `M-x org-roam-buffer-toggle` for backlinks. Org-roam's own capture
 menu also offers physics, derivation, algorithm, paper and experiment templates.
 The file IDs make links independent of titles and filenames.
+
+Org-roam's node capture menu also provides project overview (`p`), investigation
+(`i`), benchmark (`b`), and architecture decision record (`a`) templates. Use
+The lowercase `p` capture template is provided by `org-project-capture` with
+Projectile as its project-discovery backend. `org-project-todo` captures to the
+current Git project from any shell directory inside its worktree; the current
+Emacs project can also use **SPC n p**. It requires a real Git worktree and
+reports an error outside one. `org-project-agenda` and **SPC n P** show only the
+current project's TODOs. These commands work from Neovim and do not require
+changing the daemon's current buffer.
+
+Project tasks live outside repositories at
+`<orgDirectory>/projects/<sha256-of-git-common-dir>/tasks.org`. The full hash
+avoids collisions between repositories with the same folder name. Linked
+worktrees of a bare repository share the same sidecar; an independent clone
+has a different Git common directory and gets a separate file. The sidecar
+records repository root and worktree paths for context. Its location is private
+to that host's configured Org root and is never written into Git. Existing
+sidecars are discovered from this one `projects/` directory for the global
+agenda; absent `tasks.org` files are ignored. The project-only agenda scopes
+itself to one sidecar. TODO, NEXT and WAITING are actionable; DONE and
+CANCELLED are closed states.
+
+Use `org-capture t` for personal tasks that belong in `agenda/tasks.org`.
+Project TODOs complement that list and do not replace Linear issue ownership or
+GitHub PR state. Org holds personal next actions and engineering context; it
+does not sync or write back to either service. `org-project-capture
+path/to/file 42` remains the separate engineering-note command: it records the
+current checkout's root, branch and commit plus a local source link and, for a
+GitHub `origin`, a commit permalink with a line anchor. The local link opens the
+current checkout at the requested line, including uncommitted work. The remote
+permalink targets the recorded `HEAD` commit, so uncommitted changes are not
+misrepresented as durable content. GitHub SSH, SCP-style SSH and HTTPS remotes
+are recognized; local, file and other-host remotes keep the local link and
+commit metadata without an invented web URL. The command does not edit the
+repository.
 
 Daily notes use journal/YYYY-MM-DD.org. Open today repeatedly to return to the
 same note; use `org-roam-dailies-goto-previous-note` and
@@ -158,21 +217,24 @@ New graphical frames show Doom's dashboard, with capture, agenda, knowledge and
 journal buttons. The terminal has a text banner and the same menu. Buttons are
 also reachable by keyboard; the normal Doom leader bindings continue to work.
 
-Org uses the Nix-managed TeX and dvisvgm tools to preview inline and display
-math. In an Org buffer use **SPC m l p** (`org-latex-preview`) to toggle the
-preview at point; clear and regenerate it after changing an equation. Use
-**SPC m l i** to toggle inline image previews. Keep figures and attached PDFs
-as writable files beside a note or in its attachments directory; use relative
+Org uses Nix-managed TeX and dvisvgm for inline and display math previews. In an
+Org buffer use **SPC m l p** (`org-latex-preview`) to toggle the preview at
+point; clear and regenerate it after changing an equation. Use **SPC m l i**
+to toggle inline image previews. The shared profile also includes the compact
+LaTeX article, BibLaTeX/Biber, Latin Modern, `latexmk`, and `rsvg-convert`
+toolchain for PDF export. Keep figures and attached PDFs as writable files
+beside a note or in its attachments directory; use relative
 `[[file:figures/plot.svg]]` and `[[file:papers/paper.pdf]]` links so exports
-remain portable. The configured TeX subset targets previews; PDF export may
-require additional TeX packages for the document class and bibliography.
+remain portable.
 
 Citar uses `bibliography/references.bib` under each host's Org root and looks
 for local papers in `bibliography/papers/`. Existing bibliography data is not
 overwritten. Name a paper `CITEKEY.pdf` to associate it with an entry. Insert
 with **SPC m i c** (`org-cite-insert`); follow a citation with `C-c C-o` and
 choose a local file. Put `#+print_bibliography:` in a document to include its
-references on HTML export. Use `org-attach` when a note needs its own files.
+references on HTML or PDF export. LaTeX uses BibLaTeX with Biber; HTML uses
+Org's basic citation processor. Use `org-attach` when a note needs its own
+files.
 
 Opening or exporting a document does not execute source blocks. Explicit Babel
 execution asks for confirmation; review the code before answering. Python,
@@ -187,10 +249,13 @@ only non-session blocks have been checked here. If uv or Pixi are not installed
 by your environment, add them through your normal Nix/project setup.
 
 The synthetic example in `docs/examples/scientific/` illustrates a derivation,
-a citation, a linked node and a Python-generated SVG. Copy it to a writable
-scratch directory, execute the Python block after confirmation, then run
-`org-html-export-to-html`; the sample PDF link is illustrative. Engineering
-project and ADR templates remain future work.
+rendered equations, a citation, a linked node, a Python-generated SVG and its
+PDF figure. Copy it to a writable directory; execute the Python block, then the
+shell block that runs `rsvg-convert`, confirming each after reviewing it. Use
+`C-c C-e h h` for HTML or `C-c C-e l p` for PDF (`M-x org-latex-export-to-pdf`).
+Opening or exporting the document does not run either block. The generated
+figure is linked relatively, and the bibliography is local to the example.
+Engineering project and ADR templates are separate from project-local TODOs.
 
 ## Validation and manual checks
 

@@ -64,6 +64,7 @@ in
             "org-capture"
             "org-agenda"
             "org-notes"
+            "org-project-capture"
           ])
         ) stable.config.home.packages;
         assert !stable.options.knowledge.orgDirectory.type.check "relative/notes";
@@ -75,7 +76,12 @@ in
         pkgs.runCommand "doom-startup"
           {
             nativeBuildInputs = [
+              pkgs.bash
+              pkgs.git
+              pkgs.jq
+              pkgs.poppler-utils
               pkgs.python3
+              pkgs.util-linux
               pkgs.uv
               pkgs.pixi
             ];
@@ -86,10 +92,12 @@ in
             export XDG_CACHE_HOME="$HOME/.cache"
             export XDG_STATE_HOME="$HOME/.local/state"
             export DOOMLOCALDIR="$XDG_STATE_HOME/doom/"
+            unset DISPLAY WAYLAND_DISPLAY GDK_BACKEND XAUTHORITY
             mkdir -p "$HOME" "$XDG_RUNTIME_DIR" "$DOOMLOCALDIR"
             cp -R ${../../docs/examples/scientific} "$HOME/scientific-example"
             chmod -R u+w "$HOME/scientific-example"
             chmod 700 "$XDG_RUNTIME_DIR"
+            bash ${../../tests/scripts/org-client-test.sh} ${../../modules/applications/emacs/scripts/org-client.sh}
             app=${smoke.config.programs.doom-emacs.finalEmacsPackage}/bin
             "$app/emacs" --fg-daemon="$XDG_RUNTIME_DIR/server" > daemon.log 2>&1 &
             daemon=$!
@@ -104,7 +112,10 @@ in
               sleep 0.5
             done
             if ! "$ready"; then cat daemon.log; exit 1; fi
-            "$app/emacsclient" -s "$XDG_RUNTIME_DIR/server" -e '(load "${../../tests/doom}/startup.el" nil nil t)' > result
+            if ! "$app/emacsclient" -s "$XDG_RUNTIME_DIR/server" -e '(load "${../../tests/doom}/startup.el" nil nil t)' > result 2>&1; then
+              cat result daemon.log
+              exit 1
+            fi
             grep -qx t result || { cat result daemon.log; exit 1; }
             "$app/emacsclient" -s "$XDG_RUNTIME_DIR/server" -e '(kill-emacs)' || true
             wait "$daemon"

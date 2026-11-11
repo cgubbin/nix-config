@@ -68,9 +68,35 @@ a writable local SQLite cache; and no source-block execution on document open.
 The node-picker launcher also passed in the VM, alongside agenda and capture.
 
 New daily notes follow standard Org-roam editing: the buffer is created and
-the user saves it normally. Reopening the saved date reuses the file. Full
-scientific export/toolchains and engineering project/ADR templates remain
-follow-up scope, as do adoption and real runtime tests in the work repository.
+the user saves it normally. Reopening the saved date reuses the file.
+
+## Cross-host Org workflows and scientific PDF export
+
+The OpenSpec change `complete-cross-host-org-workflows` adds pinned
+`org-project-capture`, Projectile and its compatibility backend. Project tasks
+are stored at `projects/<sha256-of-git-common-dir>/tasks.org` under the
+host-specific writable Org root. Tests cover same-basename repositories,
+explicit and current project capture, linked worktrees from a bare repository,
+sidecar privacy, agenda filtering, and terminal launch requests while another
+project is active in the daemon. Independent clones remain separate. Shell
+launcher tests exercise terminal argument handling, out-of-Git diagnostics,
+and local, GitHub and file remotes. Org source links were followed from notes
+under `roam/` and resolved to the requested file and line.
+
+The scientific example now exports both HTML and PDF. Its Python block creates
+an SVG, its separately confirmed shell block converts it to PDF, and BibLaTeX
+with Biber produces the reference list. PDF text and the embedded image are
+verified with Poppler. The export checks confirm that HTML/PDF export does not
+rerun the blocks. Added Nix closure size for TeX PDF packages, Biber and
+`librsvg` is 74.9 MiB over the previous TeX-preview closure, measured with the
+same pinned nixpkgs. The complete Doom package closure is 1.9 GiB.
+
+The headless startup check clears display variables before starting the daemon;
+it exercises terminal capture, scoped/global project agendas and PDF export.
+Both stable and unstable Home Manager package builds pass. It does not verify
+real Hyprland focus, Kitsune shortcuts, WSL shutdown/start behavior or WSLg.
+Those host-level checks remain pending and are described in
+[`emacs-handoff.md`](emacs-handoff.md).
 
 ## Final integration results
 

@@ -19,6 +19,11 @@
         p.ulem
         p.dvips
         p.dvisvgm
+        p.latexmk
+        p.biblatex
+        p.lm
+        p.wrapfig
+        p.capt-of
       ]);
       commands =
         map
@@ -31,10 +36,12 @@
                 pkgs.util-linux
                 pkgs.systemd
                 pkgs.jq
+                pkgs.git
               ];
               text = ''
                 action=${lib.escapeShellArg action}
                 client=${emacs}/bin/emacsclient
+                terminalClient=${lib.boolToString (!cfg.enableGraphicalIntegration)}
               ''
               + builtins.readFile ./scripts/org-client.sh;
             }
@@ -43,6 +50,9 @@
             "capture"
             "agenda"
             "notes"
+            "project-capture"
+            "project-todo"
+            "project-agenda"
           ];
       doomDir = pkgs.runCommand "doom-config" { } ''
         mkdir -p "$out"
@@ -85,11 +95,19 @@
           inherit doomDir;
           emacs = pkgs.emacs-pgtk;
           doomLocalDir = "${config.xdg.stateHome}/doom";
-          extraPackages = epkgs: [ epkgs.citar ];
+          extraPackages = epkgs: [
+            epkgs.citar
+            epkgs.catppuccin-theme
+            epkgs.org-project-capture
+            epkgs.org-projectile
+            epkgs.projectile
+          ];
           extraBinPackages = [
             pkgs.git
             pkgs.ripgrep
             pkgs.fd
+            pkgs.biber
+            pkgs.librsvg
             tex
           ];
         };
@@ -101,9 +119,15 @@
         };
         systemd.user.services.emacs = lib.mkIf cfg.enableDaemon {
           Service = {
-            # Keep session graphics from the manager, without a login shell
-            # reintroducing stale display variables from a shell startup file.
+            # Terminal-only consumers must not inherit stale WSLg variables
+            # from the user manager. Graphical consumers retain session data.
             ExecStart = lib.mkForce "${emacs}/bin/emacs --fg-daemon=%t/emacs/server";
+            UnsetEnvironment = lib.optionals (!cfg.enableGraphicalIntegration) [
+              "DISPLAY"
+              "WAYLAND_DISPLAY"
+              "GDK_BACKEND"
+              "XAUTHORITY"
+            ];
             RuntimeDirectory = "emacs";
             RuntimeDirectoryMode = "0700";
             TimeoutStartSec = 60;

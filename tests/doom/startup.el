@@ -7,6 +7,13 @@
   (error "Which-key is unavailable"))
 (unless (and (fboundp '+dashboard/open) (fboundp '+dashboard-draw-ascii-banner-fn))
   (error "Doom dashboard or terminal banner unavailable"))
+(unless (eq catppuccin-flavor 'mocha)
+  (error "Catppuccin flavor is %S" catppuccin-flavor))
+(unless (memq #'doom-init-theme-h server-after-make-frame-hook)
+  (error "Doom does not load the configured theme for client frames"))
+(unless (memq 'catppuccin custom-enabled-themes)
+  (error "Catppuccin theme is not active; doom-theme=%S enabled=%S"
+         doom-theme custom-enabled-themes))
 (with-current-buffer (doom-fallback-buffer)
   (+dashboard-reload t)
   (dolist (label '("Capture a thought" "Open agenda" "Find a knowledge note" "Open today's journal"))
@@ -23,5 +30,23 @@
   (unless (equal (org-get-todo-state) "TODO")
     (error "Org editing is unavailable")))
 (load (expand-file-name "knowledge.el" (file-name-directory (or load-file-name buffer-file-name))) nil nil t)
+(unless (and (assoc "P" org-capture-templates)
+             (assoc "p" org-roam-capture-templates)
+             (assoc "i" org-roam-capture-templates)
+             (assoc "b" org-roam-capture-templates)
+             (assoc "a" org-roam-capture-templates))
+  (error "Engineering capture templates are incomplete"))
+(let* ((frame (selected-frame))
+       (old (frame-parameter frame 'kit-org-project-context)))
+  (unwind-protect
+      (progn
+        (set-frame-parameter frame 'kit-org-project-context
+                             "{\"root\":\"/repo\",\"branch\":\"main\",\"commit\":\"abc123\",\"file\":\"src/main.c\",\"line\":\"42\"}")
+        (let ((metadata (kit/org-project-metadata)))
+          (dolist (expected '("/repo" "main" "abc123" "src/main.c" "::42"))
+            (unless (string-match-p (regexp-quote expected) metadata)
+              (error "Project metadata missing %s in %s" expected metadata)))))
+    (set-frame-parameter frame 'kit-org-project-context old)))
+(load (expand-file-name "projects.el" (file-name-directory (or load-file-name buffer-file-name))) nil nil t)
 (load (expand-file-name "science.el" (file-name-directory (or load-file-name buffer-file-name))) nil nil t)
 t

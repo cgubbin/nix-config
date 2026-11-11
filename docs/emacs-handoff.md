@@ -27,45 +27,59 @@ inline image; it cannot verify real Hyprland focus behavior.
 
 ## Work WSL adoption and validation
 
-The separate repository is `/home/kit/Repos/wsl-nix-config`. The consumer
-import is pushed on branch `feature/doom-emacs-consumer` at commit `287e505`.
-It uses the personal configuration's pinned Doom commit `fe866d6`, sets the
-work-only root to `/home/kit/notes/work`, enables the daemon and leaves
-graphical integration disabled. Do not sync this tree to personal devices.
+The Work NixOS-on-WSL configuration is a separate consumer. Its notes must stay
+under a private root such as `/home/kit/notes/work`; do not sync that directory
+to personal devices. Import the exported Home Manager feature and set its
+consumer options:
 
-The work config branch is ready to try, but it has not been built or activated.
-At work, check out that branch. Convert its local `workbench` input to the Git
-URL you use there, regenerate the generated flake, and create the lockfile:
+```nix
+{ inputs, ... }:
+{
+  imports = [ inputs.personal-features.modules.homeManager.shared-doom-emacs ];
+  knowledge.orgDirectory = "/home/kit/notes/work";
+  knowledge.enableDaemon = true;
+  knowledge.enableGraphicalIntegration = false;
+}
+```
+
+The terminal-only daemon clears stale display variables and does not need WSLg.
+Keep the personal `shared-zellij` export only if the Work profile should
+replace its complete Zellij configuration; it supplies `Ctrl-b P` project TODO
+capture and `Ctrl-b A` project agenda bindings. Remove overlapping local
+Zellij configuration first. Linked worktrees created from a bare Git
+repository share a project task file within this Work Org root.
+
+For a local trial, point the Work repository's existing feature input at this
+checkout. For the long-term reproducible consumer, update that input to the
+reviewed producer Git revision and lock it. Regenerate the generated flake,
+then build before activating:
 
 ```sh
-git fetch origin feature/doom-emacs-consumer
-git switch feature/doom-emacs-consumer
 nix run .#write-flake
-nix flake lock
+nix flake lock --update-input personal-features
 nix build .#nixosConfigurations.work.config.system.build.toplevel --no-link -L
 ```
 
-Review and commit the workbench URL and lockfile updates in the work repository.
-Then activate using that repository's documented NixOS-on-WSL command. After a
-WSL shutdown/start, test
-`org-capture t`, `org-agenda`, `emacsclient -c`, `systemctl --user status emacs`
-and the user journal. Check WSLg environment refresh and Windows focus return.
-These real WSLg checks have not yet been performed.
+Review and commit the input and lockfile changes in the Work repository. Then
+activate with its documented NixOS-on-WSL command. From a bare worktree or
+ordinary checkout, test `org-project-todo`, `org-project-agenda`, `org-capture
+t`, `org-agenda` and `emacsclient -t`. Confirm a project task appears in the
+global agenda and that shell exit returns after closing the Zellij floating
+pane. For graphical integration, intentionally enable it and test WSLg
+separately. WSL shutdown/restart and real WSLg frame/focus behavior have not
+been tested here.
 
 ## Remaining roadmap
 
-- Complete the work repository import and build/activation checks described
-  above. Confirm that work notes use their own root and remain unsynchronized.
-- Optionally add and test a PDF export toolchain. Current TeX dependencies
-  provide equation previews; the full document-class and bibliography toolchain
-  is not claimed.
-- Propose a separate OpenSpec change for engineering project notes, ADR
-  templates, and optional repository-aware capture (repository, branch,
-  commit, file and line context).
-- Design any Linear/GitHub imports separately. Keep Linear authoritative for
-  issue state, GitHub authoritative for PR/CI state, and Org authoritative for
-  personal notes. Do not implement bidirectional synchronization without
-  explicit conflict and ownership rules.
+- Build and try the updated feature in the separate Work repository. Confirm
+  that work notes use their own root and remain unsynchronized.
+- On Kitsune, test real Hyprland capture/agenda shortcuts and Zellij floating
+  panes after an explicit generation activation.
+- Expand project and ADR note templates or add optional repository-aware
+  engineering capture if those workflows need more structure.
+- Design Linear/GitHub imports separately. Keep Linear authoritative for issue
+  state, GitHub authoritative for PR/CI state, and Org authoritative for
+  personal notes. Any write-back needs explicit conflict and ownership rules.
 
 ## Validation already completed
 
