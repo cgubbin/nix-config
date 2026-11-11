@@ -19,6 +19,7 @@ the profile through Nix.
 ```sh
 org-capture       # template menu in this terminal
 org-capture t     # go directly to the TODO template
+org-project-capture [file [line]] # capture an engineering note with Git context
 org-agenda
 org-notes
 systemctl --user start emacs
@@ -141,6 +142,7 @@ under XDG directories; these are distinct from the repository and note contents.
 | c | roam/ | Scientific concept with stable ID and references section |
 | e | roam/ | Engineering investigation: question, evidence, next steps |
 | m | journal/meetings.org | Dated meeting entry and actions |
+| P | roam/ | Engineering note with repository, branch, commit, and optional file/line |
 
 For concept/investigation captures, enter the title at the initial cursor,
 then fill the sections as needed. Use `C-c C-c` to finish and `C-c C-k` to abort.
@@ -155,6 +157,17 @@ backlinks and daily navigation commands. Use `M-x org-roam-node-insert` to link 
 concept and `M-x org-roam-buffer-toggle` for backlinks. Org-roam's own capture
 menu also offers physics, derivation, algorithm, paper and experiment templates.
 The file IDs make links independent of titles and filenames.
+
+Org-roam's node capture menu also provides project overview (`p`), investigation
+(`i`), benchmark (`b`), and architecture decision record (`a`) templates. Use
+`org-project-capture path/to/file 42` from a checkout to create a project-context
+engineering note with a source link; omit the arguments for repository metadata
+only. It records the current checkout's root, branch and commit. This command
+does not edit the repository. Keep actionable tasks in `agenda/tasks.org` using
+`org-capture t`, then link them to project notes or Linear/GitHub URLs. The
+initial workflow intentionally does not enable `org-projectile`: Projectile is
+not part of this Doom setup, and project-scoped TODO storage would create a
+second task location unless its ownership semantics are specified.
 
 Daily notes use journal/YYYY-MM-DD.org. Open today repeatedly to return to the
 same note; use `org-roam-dailies-goto-previous-note` and

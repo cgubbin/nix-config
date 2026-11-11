@@ -31,6 +31,7 @@
                 pkgs.util-linux
                 pkgs.systemd
                 pkgs.jq
+                pkgs.git
               ];
               text = ''
                 action=${lib.escapeShellArg action}
@@ -44,6 +45,7 @@
             "capture"
             "agenda"
             "notes"
+            "project-capture"
           ];
       doomDir = pkgs.runCommand "doom-config" { } ''
         mkdir -p "$out"

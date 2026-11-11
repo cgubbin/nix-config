@@ -12,6 +12,9 @@
 (setq catppuccin-flavor 'mocha
       doom-theme 'catppuccin
       display-line-numbers-type nil)
+;; Doom's frame hook handles client frames, but a terminal-only daemon may have
+;; no graphical frame at init time. Load the selected theme on every startup too.
+(add-hook 'after-init-hook #'doom-init-theme-h)
 (setq +dashboard-menu-sections
       '(("Capture a thought" :icon "✎" :action org-capture :key "SPC n c")
         ("Open agenda" :icon "◷" :action org-agenda-list :key "SPC n a")

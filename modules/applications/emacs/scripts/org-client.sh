@@ -2,11 +2,28 @@
 # shellcheck disable=SC2154
 # Shared body for the three Nix-packaged launchers. action/client are supplied
 # by writeShellApplication, not by the caller's environment.
-if [[ $# -gt 1 || ( "$action" != capture && $# -ne 0 ) ]]; then
-  echo "Usage: org-$action$([[ "$action" == capture ]] && printf ' [template-key]')" >&2
+if [[ ( "$action" == project-capture && $# -gt 2 ) || ( "$action" == capture && $# -gt 1 ) || ( "$action" != project-capture && "$action" != capture && $# -ne 0 ) ]]; then
+  echo "Usage: org-$action$([[ "$action" == capture ]] && printf ' [template-key]')$([[ "$action" == project-capture ]] && printf ' [file [line]]')" >&2
   exit 2
 fi
 key=${1:-}
+projectContext=
+if [[ "$action" == project-capture ]]; then
+  file=${1:-${NVIM_FILE:-}}
+  line=${2:-${NVIM_LINE:-}}
+  root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+  branch=$(git -C "$root" symbolic-ref --quiet --short HEAD 2>/dev/null || git -C "$root" rev-parse --short HEAD 2>/dev/null || true)
+  commit=$(git -C "$root" rev-parse HEAD 2>/dev/null || true)
+  if [[ -n "$file" && "$file" != /* ]]; then
+    file=$(realpath -m -- "$file")
+  fi
+  if [[ -n "$file" && "$file" == "$root"/* ]]; then
+    file=${file#"$root"/}
+  fi
+  projectContext=$(jq -cn --arg root "$root" --arg branch "$branch" --arg commit "$commit" --arg file "$file" --arg line "$line" \
+    '{root:$root,branch:$branch,commit:$commit,file:$file,line:$line}')
+  key=P
+fi
 runtime=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
 if [[ ! -d "$runtime" || ! -O "$runtime" ]]; then
   echo "org-$action: no owned user runtime directory: $runtime" >&2
@@ -64,15 +81,22 @@ if ! "$ready"; then
 fi
 if "$terminalClient"; then
   keyLiteral=$(printf '%s' "$key" | jq -Rs '.')
-  frameParameters="((kit-org-action . \"$action\") (kit-org-capture-key . $keyLiteral))"
+  if [[ "$action" == project-capture ]]; then
+    contextLiteral=$(printf '%s' "$projectContext" | jq -Rs '.')
+    frameParameters="((kit-org-action . \"project\") (kit-org-capture-key . $keyLiteral) (kit-org-project-context . $contextLiteral))"
+  else
+    frameParameters="((kit-org-action . \"$action\") (kit-org-capture-key . $keyLiteral))"
+  fi
   flock -u 9
   exec "$client" --socket-name "$runtime/emacs/server" --alternate-editor=false \
     --tty --frame-parameters="$frameParameters"
 else
-  payload=$(jq -cn --arg action "$action" --arg key "$key" \
+  workflow=$action
+  [[ "$action" == project-capture ]] && workflow=project
+  payload=$(jq -cn --arg action "$workflow" --arg key "$key" \
     --arg display "$display" --arg wayland "$wayland" \
-    --arg authority "${XAUTHORITY:-}" --arg backend "$backend" \
-    '{action:$action,key:$key,display:$display,wayland:$wayland,authority:$authority,backend:$backend}')
+    --arg authority "${XAUTHORITY:-}" --arg backend "$backend" --arg projectContext "$projectContext" \
+    '{action:$action,key:$key,display:$display,wayland:$wayland,authority:$authority,backend:$backend,projectContext:$projectContext}')
   # Quote JSON as a Lisp string; user text is never interpolated as Lisp syntax.
   quoted=$(printf '%s' "$payload" | jq -Rs '.')
   # A template/node picker can remain interactive; do not hold the launch lock

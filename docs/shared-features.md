@@ -1,7 +1,7 @@
 # Shared features
 
 This repository exports `modules.homeManager.shared-git`, `shared-shells`,
-`shared-cli`, `shared-editor`, and `shared-doom-emacs`. Kitsune uses the same definitions. Discovery
+`shared-cli`, `shared-editor`, `shared-doom-emacs`, and `shared-zellij`. Kitsune uses the same definitions. Discovery
 alone does not enable them. All use consumer `pkgs`; identities, credentials,
 state versions and machine settings belong to the consumer.
 
@@ -12,6 +12,7 @@ state versions and machine settings belong to the consumer.
 | shared-cli | CLI packages and Atuin/Bat/FZF/Yazi/etc. | history sync choices, shell binding overrides; no cloud/AI service selection |
 | shared-editor | Nixvim baseline, plugins, snippets | matching Nixvim Home Manager companion module; work-only extensions and personal vault configuration |
 | shared-doom-emacs | Declarative Doom, Org capture/agenda/roam, optional managed daemon | Linux consumer; independent writable Org root; optional graphical session integration; see [Doom/Org guide](emacs-org.md) |
+| shared-zellij | Complete Zellij config, layouts, Ctrl-b Org floating panes, Catppuccin Mocha | Complete replacement for the consumer's Zellij config and layouts; Org actions require `shared-doom-emacs` |
 
 Stable fixture uses this repository's locked stable nixpkgs/Home Manager/Nixvim.
 Work-like fixture uses nixpkgs `319e4cebef10cbb636c6ea392137b52ad105336a`,
@@ -76,6 +77,27 @@ Treat removal/renaming of exports or mandatory companion changes as breaking
 changes requiring an explicit consumer migration. The work host and company
 starter remain independently owned; exports do not resolve divergence until the
 work repository actually adopts them.
+
+### Replace the Work Zellij configuration
+
+Import the complete module in the Work Home Manager profile:
+
+```nix
+{ inputs, ... }: {
+  flake.modules.homeManager.kit = {
+    imports = [ inputs.personal-features.modules.homeManager.shared-zellij ];
+  };
+}
+```
+
+Before importing it, remove Work's existing `programs.zellij` configuration,
+`.config/zellij/config.kdl` declaration, and generated layout declarations.
+The export is the sole owner of those files and enables Zellij by default.
+Keep the Work Doom export enabled as well so the `org-capture`, `org-agenda`,
+and `org-notes` commands are available to the Ctrl-b floating-pane bindings.
+Regenerate the Work flake, update the `personal-features` lock entry to the
+reviewed producer revision, then evaluate and build the Work host before
+activation. If needed, roll back by restoring the prior local config and lock.
 
 The unstable fixture retains the work consumer's local see-cat C17 and semgrep
 PyJWT dependency workarounds via its own package overlay. The first full consumer

@@ -7,7 +7,7 @@
          (wayland (alist-get 'wayland data))
          (display (alist-get 'display data))
          (parameters '((window-system . pgtk))))
-    (unless (member action '("capture" "agenda" "notes"))
+    (unless (member action '("capture" "agenda" "notes" "project"))
       (user-error "Unknown Org workflow: %s" action))
     ;; Refresh an already-running daemon too. The client runtime/socket remains
     ;; owned by systemd; only the GUI connection environment is changed here.
@@ -18,13 +18,14 @@
     (when (and (string-empty-p wayland) (string-empty-p display))
       (user-error "No graphical display in launch request"))
     (require 'org)
-    (if (equal action "capture")
+    (if (member action '("capture" "project"))
         (let ((+org-capture-frame-parameters
                (append '((name . "doom-capture") (transient . t)
                          (kit-org-capture . t) (width . 80) (height . 24))
+                       `((kit-org-project-context . ,(alist-get 'projectContext data)))
                        parameters)))
           (condition-case nil
-              (+org-capture/open-frame nil key)
+              (+org-capture/open-frame nil (if (equal action "project") "P" key))
             (quit (+org-capture-cleanup-frame-h))))
       (let ((frame (make-frame (append '((name . "Org")) parameters))))
         (select-frame-set-input-focus frame)
@@ -99,7 +100,7 @@
     (when action
       (set-frame-parameter frame 'kit-org-action nil)
       (set-frame-parameter frame 'kit-org-terminal-client t)
-      (unless (member action '("capture" "agenda" "notes"))
+      (unless (member action '("capture" "agenda" "notes" "project"))
         (user-error "Unknown Org workflow: %s" action))
       (require 'org)
       (pcase action
@@ -107,6 +108,10 @@
          (setq kit/org-terminal-capture-frame frame)
          (set-frame-parameter frame 'kit-org-terminal-capture t)
          (org-capture nil (unless (equal key "") key)))
+        ("project"
+         (setq kit/org-terminal-capture-frame frame)
+         (set-frame-parameter frame 'kit-org-terminal-capture t)
+         (org-capture nil "P"))
         ("agenda"
          (org-agenda nil "a")
          (kit/org-terminal-enable-mode frame))

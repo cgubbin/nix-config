@@ -64,6 +64,7 @@ in
             "org-capture"
             "org-agenda"
             "org-notes"
+            "org-project-capture"
           ])
         ) stable.config.home.packages;
         assert !stable.options.knowledge.orgDirectory.type.check "relative/notes";
