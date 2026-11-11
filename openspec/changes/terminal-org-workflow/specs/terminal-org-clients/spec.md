@@ -26,3 +26,10 @@ When graphical integration is enabled, existing graphical Org frames and desktop
 #### Scenario: Launch from the graphical workstation
 - **WHEN** a host enables graphical integration and invokes an Org launcher
 - **THEN** the launcher uses the graphical client workflow
+
+### Requirement: Catppuccin Mocha appearance
+The declarative Doom profile MUST load the Catppuccin Mocha theme in terminal and graphical frames.
+
+#### Scenario: Start Doom Emacs
+- **WHEN** Doom starts from the Nix-managed profile
+- **THEN** Catppuccin Mocha is loaded without downloading Emacs packages

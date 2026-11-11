@@ -11,6 +11,8 @@ Kitsune uses `/home/kit/notes/personal`. This feature configures no note sync.
 to false for consumers and is enabled explicitly on Kitsune. With the daemon
 disabled, ordinary Doom editing remains available; launch helpers and shortcuts
 are omitted. The feature never changes EDITOR or VISUAL away from Neovim.
+Emacs and Zellij use Catppuccin Mocha; the Emacs theme package is built into
+the profile through Nix.
 
 ## Daemon and quick entry
 

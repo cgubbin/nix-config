@@ -7,7 +7,10 @@
                         (doom-profile-state-dir t)))
   (make-directory directory t))
 (load! "entrypoints")
-(setq doom-theme 'doom-one
+(when-let ((theme-file (locate-library "catppuccin-theme")))
+  (add-to-list 'custom-theme-load-path (file-name-directory theme-file)))
+(setq catppuccin-flavor 'mocha
+      doom-theme 'catppuccin
       display-line-numbers-type nil)
 (setq +dashboard-menu-sections
       '(("Capture a thought" :icon "✎" :action org-capture :key "SPC n c")

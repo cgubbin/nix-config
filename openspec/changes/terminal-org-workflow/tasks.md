@@ -4,3 +4,4 @@
 - [x] 2. Select terminal or graphical launcher behavior from `knowledge.enableGraphicalIntegration`; remove display checks from terminal mode.
 - [x] 3. Document terminal-only WSL usage and client exit behavior while preserving graphical-host guidance.
 - [x] 4. Validate Nix evaluation/builds and run available Emacs Lisp and shell checks without activating the configuration.
+- [x] 5. Match Emacs and Zellij to Catppuccin Mocha and verify Doom loads the Nix-managed theme.

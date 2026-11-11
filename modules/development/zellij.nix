@@ -69,7 +69,7 @@ _: {
               }
           }
 
-          theme "tokyo-night-dark"
+          theme "catppuccin-mocha"
 
           themes {
             tokyo-night-dark {

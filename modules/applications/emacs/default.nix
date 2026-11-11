@@ -86,7 +86,10 @@
           inherit doomDir;
           emacs = pkgs.emacs-pgtk;
           doomLocalDir = "${config.xdg.stateHome}/doom";
-          extraPackages = epkgs: [ epkgs.citar ];
+          extraPackages = epkgs: [
+            epkgs.citar
+            epkgs.catppuccin-theme
+          ];
           extraBinPackages = [
             pkgs.git
             pkgs.ripgrep
