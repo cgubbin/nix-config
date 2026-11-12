@@ -122,6 +122,10 @@
             # Terminal-only consumers must not inherit stale WSLg variables
             # from the user manager. Graphical consumers retain session data.
             ExecStart = lib.mkForce "${emacs}/bin/emacs --fg-daemon=%t/emacs/server";
+            # A daemon decides tty colour depth from its own environment, not
+            # the client's. Terminal-only consumers otherwise get themes
+            # quantized to 256 colours.
+            Environment = lib.optionals (!cfg.enableGraphicalIntegration) [ "COLORTERM=truecolor" ];
             UnsetEnvironment = lib.optionals (!cfg.enableGraphicalIntegration) [
               "DISPLAY"
               "WAYLAND_DISPLAY"
