@@ -254,8 +254,13 @@ Linked worktrees share the common Git directory and therefore one task file."
            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                               "#+title: ${title}\n#+filetags: :adr:\n")
            :unnarrowed t)
-          ;; One note per fab process manual; the body lives in the notes repository so it can
-          ;; change without a rebuild.
+          ;; Process notes. The bodies live in the notes repository so they can change without a
+          ;; rebuild. "f": one review per stored process (our data against the fab's manual).
+          ("f" "Fab process review" plain (file "~/notes/work/templates/process.org")
+           :target (file+head "%<%Y%m%d%H%M%S>-process-${slug}.org"
+                              "#+title: Process: ${title}\n#+filetags: :process:\n")
+           :unnarrowed t)
+          ;; "F": one note per fab process manual (the platform itself).
           ("F" "Fab platform" plain (file "~/notes/work/templates/platform.org")
            :target (file+head "%<%Y%m%d%H%M%S>-platform-${slug}.org"
                               "#+title: Platform: ${title}\n#+filetags: :process:platform:\n")
