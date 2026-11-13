@@ -253,6 +253,12 @@ Linked worktrees share the common Git directory and therefore one task file."
            "* Status\nProposed\n\n* Context\n%?\n\n* Decision\n\n* Alternatives\n\n* Consequences\n\n* References\n"
            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                               "#+title: ${title}\n#+filetags: :adr:\n")
+           :unnarrowed t)
+          ;; One note per fab process manual; the body lives in the notes repository so it can
+          ;; change without a rebuild.
+          ("F" "Fab platform" plain (file "~/notes/work/templates/platform.org")
+           :target (file+head "%<%Y%m%d%H%M%S>-platform-${slug}.org"
+                              "#+title: Platform: ${title}\n#+filetags: :process:platform:\n")
            :unnarrowed t))
         ;; Dailies are transient activity notes, separate from durable nodes.
         org-roam-dailies-directory "../journal/"
