@@ -52,6 +52,11 @@ in
 
       # Sound card fix?
 
+      # Trust the Pi's verified Caddy CA for its internal HTTPS services.
+      security.pki.certificateFiles = [
+        ./../../../assets/certificates/pi5-caddy-root.crt
+      ];
+
       networking.hostName = "kitsune"; # Define your hostname.
       # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
