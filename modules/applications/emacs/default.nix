@@ -10,6 +10,14 @@
     let
       cfg = config.knowledge;
       emacs = config.programs.doom-emacs.finalEmacsPackage;
+      orgOpenPdf = pkgs.writeShellApplication {
+        name = "org-open-pdf";
+        runtimeInputs = [
+          pkgs.coreutils
+          pkgs.zathura
+        ];
+        text = builtins.readFile ./scripts/org-open-pdf.sh;
+      };
       tex = pkgs.texlive.withPackages (p: [
         p.scheme-basic
         p.latex
@@ -98,8 +106,12 @@
           extraPackages = epkgs: [
             epkgs.citar
             epkgs.catppuccin-theme
+            epkgs.forge
+            epkgs.org-download
+            epkgs.org-noter
             epkgs.org-project-capture
             epkgs.org-projectile
+            epkgs.pdf-tools
             epkgs.projectile
           ];
           extraBinPackages = [
@@ -108,6 +120,7 @@
             pkgs.fd
             pkgs.biber
             pkgs.librsvg
+            pkgs.zathura
             tex
           ];
         };
@@ -137,7 +150,7 @@
             TimeoutStartSec = 60;
           };
         };
-        home.packages = lib.optionals cfg.enableDaemon commands;
+        home.packages = lib.optionals cfg.enableDaemon (commands ++ [ orgOpenPdf ]);
         wayland.windowManager.hyprland.settings.bind =
           lib.mkIf
             (cfg.enableDaemon && cfg.enableGraphicalIntegration && config.wayland.windowManager.hyprland.enable)

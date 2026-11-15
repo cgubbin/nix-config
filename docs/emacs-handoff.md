@@ -71,21 +71,32 @@ been tested here.
 
 ## Remaining roadmap
 
-- Build and try the updated feature in the separate Work repository. Confirm
-  that work notes use their own root and remain unsynchronized.
+- Build the updated feature in the separate Work repository. Confirm that work
+  notes use their own root and remain unsynchronized. The Work consumer must
+  pin the producer revision and lock it before relying on these additions.
+- In WSL, check `command -v org-open-pdf`, `printf '%s\n' "$WAYLAND_DISPLAY"`,
+  and `test -S "/mnt/wslg/runtime-dir/${WAYLAND_DISPLAY##*/}"` (or verify the
+  absolute socket path). Open a local note's `zathura:` page link. This requires
+  WSLg and Zathura; the daemon itself remains terminal-only. `M-x
+  kit/org-noter-start-graphical` is available only in a graphical Emacs frame.
+- Configure GitHub credentials outside Nix through Emacs `auth-source` or the
+  existing host credential helper, then try `M-x forge-list-topics` in a
+  repository opened with Magit. Forge access and credentials were not tested
+  against a live account. Linear support is plain HTTPS references only.
 - On Kitsune, test real Hyprland capture/agenda shortcuts and Zellij floating
   panes after an explicit generation activation.
-- Expand project and ADR note templates or add optional repository-aware
-  engineering capture if those workflows need more structure.
-- Design Linear/GitHub imports separately. Keep Linear authoritative for issue
-  state, GitHub authoritative for PR/CI state, and Org authoritative for
-  personal notes. Any write-back needs explicit conflict and ownership rules.
+- No Linear/GitHub synchronization or write-back is included. Keep Linear
+  authoritative for issue state, GitHub authoritative for PR/CI state, and Org
+  authoritative for notes and personal next actions. Any future write-back
+  requires explicit field ownership and conflict rules.
 
 ## Validation already completed
 
-The Doom change passed strict OpenSpec validation, formatting/lint checks,
-flake evaluation, stable and unstable consumer builds, the Kitsune system
-closure build, isolated Org/Babel/Citar/TeX tests, and the disposable graphical
-session VM. No generation was activated. See
+The earlier Doom change passed strict OpenSpec validation, formatting/lint
+checks, flake evaluation, stable and unstable consumer builds, the Kitsune
+system closure build, isolated Org/Babel/Citar/TeX tests, and the disposable
+graphical session VM. No generation was activated. PDF-link and Forge checks
+for the current OpenSpec change are tracked separately in
+[`emacs-org-validation.md`](emacs-org-validation.md). See
 [`emacs-science-validation.md`](emacs-science-validation.md) and
 [`emacs-org-validation.md`](emacs-org-validation.md) for details.

@@ -105,6 +105,29 @@ if ! "$ready"; then
   exit 1
 fi
 if "$terminalClient"; then
+  terminalWayland=${WAYLAND_DISPLAY:-}
+  if [[ -n "$terminalWayland" && "$terminalWayland" != /* ]]; then
+    if [[ -S "$runtime/$terminalWayland" ]]; then
+      terminalWayland="$runtime/$terminalWayland"
+    elif [[ -S "/mnt/wslg/runtime-dir/$terminalWayland" ]]; then
+      terminalWayland="/mnt/wslg/runtime-dir/$terminalWayland"
+    else
+      terminalWayland=
+    fi
+  fi
+  [[ -z "$terminalWayland" || -S "$terminalWayland" ]] || terminalWayland=
+  terminalDisplay=${DISPLAY:-}
+  if [[ "$terminalDisplay" == :* ]]; then
+    terminalNumber=${terminalDisplay#:}
+    terminalNumber=${terminalNumber%%.*}
+    [[ -S "/tmp/.X11-unix/X$terminalNumber" ]] || terminalDisplay=
+  fi
+  terminalAuthority=${XAUTHORITY:-}
+  [[ -z "$terminalAuthority" || -r "$terminalAuthority" ]] || terminalAuthority=
+  pdfContext=$(jq -cn --arg display "$terminalDisplay" --arg wayland "$terminalWayland" \
+    --arg authority "$terminalAuthority" --arg runtime "$runtime" \
+    '{display:$display,wayland:$wayland,authority:$authority,runtime:$runtime}')
+  pdfContextLiteral=$(printf '%s' "$pdfContext" | jq -Rs '.')
   keyLiteral=$(printf '%s' "$key" | jq -Rs '.')
   if [[ "$action" == project-capture || "$action" == project-todo || "$action" == project-agenda ]]; then
     contextLiteral=$(printf '%s' "$projectContext" | jq -Rs '.')
@@ -113,9 +136,9 @@ if "$terminalClient"; then
     else
       workflow=$action
     fi
-    frameParameters="((kit-org-action . \"$workflow\") (kit-org-capture-key . $keyLiteral) (kit-org-project-context . $contextLiteral))"
+    frameParameters="((kit-org-action . \"$workflow\") (kit-org-capture-key . $keyLiteral) (kit-org-project-context . $contextLiteral) (kit-org-pdf-launch-context . $pdfContextLiteral))"
   else
-    frameParameters="((kit-org-action . \"$action\") (kit-org-capture-key . $keyLiteral))"
+    frameParameters="((kit-org-action . \"$action\") (kit-org-capture-key . $keyLiteral) (kit-org-pdf-launch-context . $pdfContextLiteral))"
   fi
   flock -u 9
   exec "$client" --socket-name "$runtime/emacs/server" --alternate-editor=false \
