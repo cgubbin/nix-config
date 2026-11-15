@@ -1,0 +1,392 @@
+diff --git a/home/kit/bat.nix b/home/kit/bat.nix
+index e2fc581..b3184ae 100644
+--- a/home/kit/bat.nix
++++ b/home/kit/bat.nix
+@@ -1,2 +1,2 @@
+-{pkgs, ...}: {
++{pkgs, lib, ...}: {
+   programs.bat = {
+@@ -4,3 +4,3 @@
+     config = {
+-      style = "numbers,changes,header,grid,snip";
++      style = lib.mkForce "numbers,changes,header,grid,snip";
+       paging = "never";
+diff --git a/home/kit/bottom.nix b/home/kit/bottom.nix
+deleted file mode 100644
+index 5152b8b..0000000
+--- a/home/kit/bottom.nix
++++ /dev/null
+@@ -1,13 +0,0 @@
+-{...}: {
+-  programs.bottom = {
+-    enable = true;
+-    settings = {
+-      flags = {
+-        battery = true;
+-        color = "default-light";
+-        tree = true;
+-        enable_cache_memory = true;
+-      };
+-    };
+-  };
+-}
+diff --git a/home/kit/eza.nix b/home/kit/eza.nix
+deleted file mode 100644
+index d26cd54..0000000
+--- a/home/kit/eza.nix
++++ /dev/null
+@@ -1,6 +0,0 @@
+-{...}: {
+-  programs.eza = {
+-    enable = true;
+-    enableFishIntegration = true;
+-  };
+-}
+diff --git a/home/kit/fzf.nix b/home/kit/fzf.nix
+deleted file mode 100644
+index 3106cf5..0000000
+--- a/home/kit/fzf.nix
++++ /dev/null
+@@ -1,35 +0,0 @@
+-{...}: {
+-  programs.fzf = {
+-    enable = true;
+-    enableFishIntegration = true;
+-
+-    defaultOptions = [
+-      "--height=40%"
+-      "--layout=reverse"
+-      "--border"
+-    ];
+-
+-    fileWidget.command = "fd --type f";
+-    fileWidget.options = [
+-      "--preview='bat --style=numbers --color=always {}'"
+-      "--preview-window=right,60%,border-left"
+-      "--bind=ctrl-/:toggle-preview"
+-      "--bind=alt-k:preview-page-up"
+-      "--bind=alt-j:preview-page-down"
+-    ];
+-
+-    changeDirWidget.command = "fd --type d";
+-    changeDirWidget.options = [
+-      "--preview='eza --tree --level=2 --color=always {} | head -200'"
+-      "--preview-window=right,50%,border-left"
+-      "--bind=ctrl-/:toggle-preview"
+-      "--bind=alt-k:preview-page-up"
+-      "--bind=alt-j:preview-page-down"
+-    ];
+-
+-    historyWidget.options = [
+-      "--layout=reverse"
+-      "--border"
+-    ];
+-  };
+-}
+diff --git a/home/kit/git.nix b/home/kit/git.nix
+index cf6856c..51f2d0a 100644
+--- a/home/kit/git.nix
++++ b/home/kit/git.nix
+@@ -9,36 +9,3 @@
+ 
+-      delta = {
+-        enable = true;
+-        options = {
+-          line-numbers = true;
+-          side-by-side = true;
+-          navigate = true;
+-          syntax-theme = "default";
+-        };
+-      };
+-
+-      alias = {
+-        cleanup = "!git branch --merged | grep -v '\\*\\|master\\|develop' | xargs -n 1 -r git branch -d";
+-        prettylog = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(r) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative";
+-        root = "rev-parse --show-toplevel";
+-        s = "status -sb";
+-        l = "log --oneline --graph --decorate";
+-        ll = "log --stat --graph --decorate";
+-        d = "diff";
+-        dc = "diff --cached";
+-        co = "checkout";
+-        sw = "switch";
+-        br = "branch";
+-        ci = "commit";
+-        amend = "commit --amend";
+-        unstage = "restore --staged";
+-      };
+ 
+-      branch.autosetuprebase = "always";
+-      color.ui = true;
+-      core.askPass = "";
+-      push.default = "tracking";
+-      init.defaultBranch = "main";
+-      pull.rebase = true;
+-      rebase.autoStash = true;
+     };
+diff --git a/home/kit/navi.nix b/home/kit/navi.nix
+deleted file mode 100644
+index f3aeb33..0000000
+--- a/home/kit/navi.nix
++++ /dev/null
+@@ -1,5 +0,0 @@
+-{...}: {
+-  programs.navi = {
+-    enable = true;
+-  };
+-}
+diff --git a/home/kit/skim.nix b/home/kit/skim.nix
+deleted file mode 100644
+index d603160..0000000
+--- a/home/kit/skim.nix
++++ /dev/null
+@@ -1,11 +0,0 @@
+-{...}: {
+-  programs.skim = {
+-    enable = true;
+-    enableFishIntegration = true;
+-    defaultCommand = "rg --files --hidden";
+-    changeDirWidgetOptions = [
+-      "--preview 'eza --icons --git --color always -T -L 3 {} | head -200'"
+-      "--exact"
+-    ];
+-  };
+-}
+diff --git a/home/kit/tools.nix b/home/kit/tools.nix
+index cb5b9fa..637b54b 100644
+--- a/home/kit/tools.nix
++++ b/home/kit/tools.nix
+@@ -4,28 +4,7 @@ in {
+     with pkgs; [
+-      trash-cli
+-      dust
+-      duf
+-      dysk
+-      ripgrep
+-      htop
+-      procs
+ 
+-      yq-go
+-      jq
+       jd-diff-patch
+       jiq
+-      just
+-      eza
+-      fd
+-      tree
+-      watch
+ 
+-      watchexec
+-      hurl
+ 
+-      nix-output-monitor
+-      nix-direnv
+-      noti
+-      killall
+-      wget
+       tdf
+@@ -36,14 +15,6 @@ in {
+       }))
+-      rsync
+ 
+-      hexyl
+       nasm
+-      broot
+ 
+       # Yazi functionality
+-      ffmpeg-headless
+-      p7zip
+-      poppler
+-      resvg
+-      imagemagick
+ 
+@@ -60,3 +31,2 @@ in {
+ 
+-      xclip
+       grim
+diff --git a/home/kit/yazi.nix b/home/kit/yazi.nix
+deleted file mode 100644
+index db285e3..0000000
+--- a/home/kit/yazi.nix
++++ /dev/null
+@@ -1,7 +0,0 @@
+-{...}: {
+-  programs.yazi = {
+-    enable = true;
+-    shellWrapperName = "y";
+-    enableFishIntegration = true;
+-  };
+-}
+diff --git a/home/kit/zellij.nix b/home/kit/zellij.nix
+deleted file mode 100644
+index 9d8f084..0000000
+--- a/home/kit/zellij.nix
++++ /dev/null
+@@ -1,140 +0,0 @@
+-{...}: {
+-  programs.zellij = {
+-    enable = true;
+-    enableFishIntegration = false;
+-  };
+-
+-  # NOTE: the module only supports YAML config which is deprecated
+-  home.file.zellij = {
+-    target = ".config/zellij/config.kdl";
+-    text = ''
+-      keybinds {
+-          normal clear-defaults=true {
+-              // tmux
+-              bind "Ctrl b" { SwitchToMode "Tmux"; }
+-          }
+-
+-          tmux clear-defaults=true {
+-              bind "Ctrl b" { Write 2; SwitchToMode "Normal"; }
+-              bind "Esc" { SwitchToMode "Normal"; }
+-              bind "g" { SwitchToMode "Locked"; }
+-              bind "p" { SwitchToMode "Pane"; }
+-              bind "t" { SwitchToMode "Tab"; }
+-              bind "n" { SwitchToMode "Resize"; }
+-              bind "h" { SwitchToMode "Move"; }
+-              bind "s" { SwitchToMode "Scroll"; }
+-              bind "o" { SwitchToMode "Session"; }
+-              bind "q" { Quit; }
+-          }
+-      }
+-    '';
+-  };
+-
+-  xdg.configFile."zellij/layouts/default.kdl".text = ''
+-    layout {
+-      tab name="code" {
+-        pane command="nvim" size="70%"
+-        pane split_direction="vertical" size="30%" {
+-          pane name="shell"
+-          pane name="tasks"
+-        }
+-      }
+-      tab name="git" {
+-        pane split_direction="vertical" {
+-          pane name="status"
+-          pane name="shell"
+-        }
+-      }
+-    }
+-  '';
+-
+-  xdg.configFile."zellij/layouts/nix.kdl".text = ''
+-    layout {
+-      tab name="nix" {
+-        pane command="nvim" size="68%"
+-        pane split_direction="vertical" size="32%" {
+-          pane name="build"
+-          pane name="ops"
+-        }
+-      }
+-      tab name="git" {
+-        pane split_direction="vertical" {
+-          pane name="status"
+-          pane name="shell"
+-        }
+-      }
+-    }
+-  '';
+-
+-  xdg.configFile."zellij/layouts/python.kdl".text = ''
+-    layout {
+-      tab name="code" {
+-        pane command="nvim" size="70%"
+-        pane split_direction="vertical" size="30%" {
+-          pane name="shell"
+-          pane name="tests"
+-        }
+-      }
+-      tab name="git" {
+-        pane split_direction="vertical" {
+-          pane name="status"
+-          pane name="notes"
+-        }
+-      }
+-    }
+-  '';
+-
+-  xdg.configFile."zellij/layouts/rust.kdl".text = ''
+-    layout {
+-      tab name="code" {
+-        pane command="nvim" size="65%"
+-        pane split_direction="vertical" size="35%" {
+-          pane name="build"
+-          pane name="run"
+-        }
+-      }
+-      tab name="git" {
+-        pane split_direction="vertical" {
+-          pane name="status"
+-          pane name="shell"
+-        }
+-      }
+-    }
+-  '';
+-
+-  xdg.configFile."zellij/layouts/latex.kdl".text = ''
+-    layout {
+-      tab name="write" {
+-        pane command="nvim" size="72%"
+-        pane split_direction="vertical" size="28%" {
+-          pane name="render"
+-          pane name="shell"
+-        }
+-      }
+-      tab name="refs" {
+-        pane split_direction="vertical" {
+-          pane name="notes"
+-          pane name="shell"
+-        }
+-      }
+-    }
+-  '';
+-
+-  xdg.configFile."zellij/layouts/quarto.kdl".text = ''
+-    layout {
+-      tab name="write" {
+-        pane command="nvim" size="72%"
+-        pane split_direction="vertical" size="28%" {
+-          pane name="render"
+-          pane name="shell"
+-        }
+-      }
+-      tab name="refs" {
+-        pane split_direction="vertical" {
+-          pane name="notes"
+-          pane name="shell"
+-        }
+-      }
+-    }
+-  '';
+-}
+diff --git a/home/kit/zoxide.nix b/home/kit/zoxide.nix
+deleted file mode 100644
+index d89cc27..0000000
+--- a/home/kit/zoxide.nix
++++ /dev/null
+@@ -1,6 +0,0 @@
+-{...}: {
+-  programs.zoxide = {
+-    enable = true;
+-    enableFishIntegration = true;
+-  };
+-}
+diff --git a/modules/users/kit.nix b/modules/users/kit.nix
+index 2fb037f..164b393 100644
+--- a/modules/users/kit.nix
++++ b/modules/users/kit.nix
+@@ -47,6 +47,8 @@
+       inputs.personal-features.modules.homeManager.shared-doom-emacs
+-      inputs.starter.modules.homeManager.cli-tools
++      inputs.personal-features.modules.homeManager.shared-git
++      inputs.personal-features.modules.homeManager.shared-cli-core
++      inputs.personal-features.modules.homeManager.shared-cli-review
++      inputs.personal-features.modules.homeManager.shared-zellij
+       inputs.starter.modules.homeManager.cloud-tools
+       inputs.starter.modules.homeManager.direnv
+-      inputs.starter.modules.homeManager.git
+       inputs.starter.modules.homeManager.llm-tools

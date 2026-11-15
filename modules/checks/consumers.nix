@@ -2,7 +2,7 @@
 let
   hm = config.flake.modules.homeManager;
   make =
-    manager: packages: editor: workarounds:
+    manager: packages: editor: workarounds: coreOnly:
     manager.lib.homeManagerConfiguration {
       pkgs = import packages {
         system = "x86_64-linux";
@@ -25,7 +25,7 @@ let
         editor.homeModules.nixvim
         hm.shared-git
         hm.shared-shells
-        hm.shared-cli
+        (if coreOnly then hm.shared-cli-core else hm.shared-cli)
         hm.shared-editor
         ({ pkgs, ... }: {
           home = {
@@ -62,10 +62,13 @@ let
         })
       ];
     };
-  stable = make inputs.home-manager inputs.nixpkgs inputs.nixvim false;
-  unstable = make inputs.consumer-home-manager inputs.consumer-nixpkgs inputs.consumer-nixvim true;
+  stable = make inputs.home-manager inputs.nixpkgs inputs.nixvim false false;
+  stableCore = make inputs.home-manager inputs.nixpkgs inputs.nixvim false true;
+  unstable =
+    make inputs.consumer-home-manager inputs.consumer-nixpkgs inputs.consumer-nixvim true
+      true;
   check =
-    pkgs: consumer:
+    pkgs: consumer: workarounds:
     let
       c = consumer.config;
     in
@@ -74,6 +77,14 @@ let
     assert builtins.length c.programs.nixvim.plugins.obsidian.settings.workspaces == 1;
     assert !(c.services.syncthing.enable or false);
     assert !(c.services.ollama.enable or false);
+    assert c.programs.atuin.enable == !workarounds;
+    assert !workarounds || !(builtins.hasAttr "atuin" c.systemd.user.services);
+    assert !workarounds || !(inputs.nixpkgs.lib.hasInfix "atuin" c.programs.fish.interactiveShellInit);
+    assert !workarounds || !(inputs.nixpkgs.lib.hasInfix "atuin" c.programs.nushell.extraConfig);
+    assert !(builtins.hasAttr "rebuild-dagon" c.programs.fish.shellAliases);
+    assert !(builtins.hasAttr "rebuild-sys" c.programs.fish.shellAliases);
+    assert !(builtins.hasAttr "update-sys" c.programs.fish.shellAliases);
+    assert c.programs.nushell.settings.history.file_format == "sqlite";
     assert !(c.wayland.windowManager.hyprland.enable or false);
     pkgs.runCommand "shared-feature-contract" { nativeBuildInputs = [ pkgs.git ]; } ''
       config=${c.xdg.configFile."git/config".source}
@@ -156,8 +167,9 @@ in
   };
   perSystem = { pkgs, ... }: {
     checks = {
-      shared-stable = check pkgs stable;
-      shared-unstable = check pkgs unstable;
+      shared-stable = check pkgs stable false;
+      shared-stable-core = check pkgs stableCore true;
+      shared-unstable = check pkgs unstable true;
       shared-stable-build = stable.activationPackage;
       shared-unstable-build = unstable.activationPackage;
       shared-stable-editor = editorCheck pkgs stable false;

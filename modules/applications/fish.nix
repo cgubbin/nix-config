@@ -226,9 +226,9 @@ _: {
             '';
 
             rerun = ''
-              argparse 'd/dry-run' -- $argv
+              argparse 'd/dry-run' 'x/execute' -- $argv
               if test (count $argv) -ne 1
-                  echo "Usage: rerun [--dry-run|-d] N"
+                  echo "Usage: rerun [--execute|-x] N"
                   return 1
               end
 
@@ -250,7 +250,7 @@ _: {
 
               for cmd in $commands
                   echo "> $cmd"
-                  if not set -q _flag_dry_run
+                  if set -q _flag_execute; and not set -q _flag_dry_run
                       eval $cmd
                   end
               end
@@ -782,16 +782,10 @@ _: {
 
               git add .
 
-              direnv allow
-              or begin
-                echo "mkproj: direnv allow failed"
-                return 1
-              end
-
               set -l project_dir (pwd)
 
               echo "[project] created: $project_dir"
-              echo "[project] direnv enabled"
+              echo "[project] review .envrc, then run: direnv allow"
 
               if test $should_open -eq 1
                 zjl_path "$project_dir"
@@ -911,7 +905,6 @@ _: {
             bat = lib.getExe pkgs.bat;
             broot = lib.getExe pkgs.broot;
             dust = lib.getExe pkgs.dust;
-            nh = lib.getExe pkgs.nh;
             git = lib.getExe pkgs.git;
             bandwhich = lib.getExe pkgs.bandwhich;
             procs = lib.getExe pkgs.procs;
@@ -919,10 +912,6 @@ _: {
           in
           {
             which = "readlink -f (type -p $argv)";
-            rebuild-dagon = "cd /home/louis/src/nixos-config && nixos-rebuild switch --flake .#dagon --target-host louis@dagon --use-remote-sudo --impure";
-            rebuild-sys = "${nh} os switch /home/louis/src/nixos-config";
-            update-sys = "${nh} os switch /home/louis/src/nixos-config --update";
-
             vim = "nvim";
 
             ls = "${eza} --long --header --binary --no-permissions --no-user --icons=auto";
