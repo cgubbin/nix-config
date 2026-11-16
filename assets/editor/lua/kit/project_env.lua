@@ -1,6 +1,9 @@
 -- Project environments are values passed to subprocesses, never editor globals.
 local M = {}
 local base = vim.fn.environ()
+-- Project hooks run during `direnv export` (for example a uv sync in a Nix
+-- dev shell) and can take well over 10 s.
+M.timeout = 60000
 local generations = {}
 local cache = {}
 local pending = {}
@@ -59,7 +62,7 @@ function M.load(root, callback)
     env = base,
     clear_env = true,
     text = true,
-    timeout = 10000,
+    timeout = M.timeout,
   }, function(result)
     vim.schedule(function()
       if generations[root] ~= generation then
@@ -68,6 +71,10 @@ function M.load(root, callback)
       end
       if initial_signature ~= signature(root) then
         finish(nil, "project environment changed while loading; retry")
+        return
+      end
+      if result.code == 124 or (result.signal or 0) ~= 0 then
+        finish(nil, string.format("direnv export timed out after %d s (slow project hook?); retry with :ProjectEnvRefresh", M.timeout / 1000))
         return
       end
       if result.code ~= 0 then

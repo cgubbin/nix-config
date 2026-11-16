@@ -103,6 +103,9 @@ vim.notify = function(msg, level, ...)
 end
 vim.cmd("edit " .. vim.fn.fnameescape(path))
 start(vim.api.nvim_get_current_buf())
+-- The import is deferred (and retried while Molten's host is busy); give it
+-- the full retry window before checking for warnings.
+vim.wait(kernel.import_retries * kernel.import_delay + 1000)
 vim.notify = notify
 assert(#warnings == 0, "reopening raised: " .. table.concat(warnings, "\n"))
 

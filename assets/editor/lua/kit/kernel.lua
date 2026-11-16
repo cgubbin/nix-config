@@ -172,13 +172,27 @@ end
 
 -- Shows outputs stored in an .ipynb once a kernel is attached (Molten keeps
 -- outputs per kernel, so there is nothing to show before one starts).
-function M.import(buf, name)
+-- Runs after MoltenInit returns: straight after init Molten's host can still be
+-- busy starting the kernel and rejects the request ("Request from non-main
+-- thread"), so retry briefly before reporting a failure.
+M.import_retries = 10
+M.import_delay = 200
+
+function M.import(buf, name, attempt)
+  attempt = attempt or 1
   local path = notebook_path(buf)
   if not path or vim.fn.filereadable(path) ~= 1 then return end
-  local ok, err = pcall(vim.api.nvim_buf_call, buf, function()
-    vim.cmd("MoltenImportOutput " .. vim.fn.fnameescape(path) .. " " .. name)
-  end)
-  if not ok then vim.notify("Could not load stored outputs: " .. tostring(err), vim.log.levels.WARN) end
+  vim.defer_fn(function()
+    if not vim.api.nvim_buf_is_valid(buf) then return end
+    local ok, err = pcall(vim.api.nvim_buf_call, buf, function()
+      vim.cmd("MoltenImportOutput " .. vim.fn.fnameescape(path) .. " " .. name)
+    end)
+    if ok then return end
+    if tostring(err):find("non-main thread", 1, true) and attempt < M.import_retries then
+      return M.import(buf, name, attempt + 1)
+    end
+    vim.notify("Could not load stored outputs: " .. tostring(err), vim.log.levels.WARN)
+  end, attempt == 1 and 0 or M.import_delay)
 end
 
 -- Writes the kernel's outputs into the saved .ipynb (after Jupytext has
