@@ -11,7 +11,7 @@ _: {
 
       inherit (lib) mkIf;
       cfg = config.home-config.desktop.wayland;
-      enabled = pkgs.stdenv.isLinux && cfg.hyprland.enable;
+      enabled = pkgs.stdenv.hostPlatform.isLinux && cfg.hyprland.enable;
     in
     {
       services.mako = mkIf enabled {

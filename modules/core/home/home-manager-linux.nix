@@ -9,7 +9,7 @@ _: {
       inherit (lib) mkIf;
     in
     {
-      config = mkIf pkgs.stdenv.isLinux {
+      config = mkIf pkgs.stdenv.hostPlatform.isLinux {
         home = {
           sessionVariables = {
             MOZ_ENABLE_WAYLAND = "1";

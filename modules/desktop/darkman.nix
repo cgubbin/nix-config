@@ -12,7 +12,7 @@ _: {
       cfg = config.home-config.theme;
     in
     {
-      config = mkIf pkgs.stdenv.isLinux {
+      config = mkIf pkgs.stdenv.hostPlatform.isLinux {
         services.darkman =
           let
             swaync-client = lib.getExe' pkgs.swaynotificationcenter "swaync-client";

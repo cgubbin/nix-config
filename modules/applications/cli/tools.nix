@@ -50,7 +50,7 @@ _: {
           imagemagick
 
         ]
-        ++ optionals pkgs.stdenv.isLinux [
+        ++ optionals pkgs.stdenv.hostPlatform.isLinux [
           xclip
         ];
       programs.eza = {
@@ -82,7 +82,7 @@ _: {
         treefmt
         zathura
       ]
-      ++ lib.optionals pkgs.stdenv.isLinux [
+      ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
         grim
         slurp
         valgrind
