@@ -11,6 +11,89 @@
 (require 'ox-latex)
 (require 'citar)
 (require 'citar-org)
+(require 'org-download)
+(require 'org-noter)
+(require 'pdf-tools)
+(require 'forge)
+
+(cl-assert (eq org-download-method 'directory))
+(let ((blocked nil))
+  (condition-case nil
+      (kit/org-noter-start-graphical)
+    (user-error (setq blocked t)))
+  (cl-assert blocked))
+
+;; Linear and GitHub references remain normal external Org links.
+(with-temp-buffer
+  (org-mode)
+  (insert "[[https://linear.app/workspace/issue/TEAM-123][TEAM-123]]")
+  (goto-char (point-min))
+  (let ((opened nil))
+    (cl-letf (((symbol-function 'browse-url) (lambda (url &rest _) (setq opened url))))
+      (org-open-at-point))
+    (cl-assert (equal opened "https://linear.app/workspace/issue/TEAM-123"))))
+
+;; A zathura: link decodes spaces, keeps arguments separate, and gives WSLg
+;; environment to the viewer process without mutating daemon state.
+(let* ((root (expand-file-name "zathura-link-test" (getenv "HOME")))
+       (note (expand-file-name "reading notes.org" root))
+       (pdf (expand-file-name "paper with spaces.pdf" root))
+       (frame (selected-frame))
+       (old-context (frame-parameter frame 'kit-org-pdf-launch-context))
+       (captured-command nil)
+       (captured-wayland nil))
+  (make-directory root t)
+  (with-temp-file note (insert "#+title: Zathura link test\n"))
+  (with-temp-file pdf (insert "%PDF-1.4\n"))
+  (unwind-protect
+      (progn
+        (set-frame-parameter frame 'kit-org-pdf-launch-context
+                             "{\"display\":\"\",\"wayland\":\"/mnt/wslg/runtime-dir/wayland-0\",\"authority\":\"\",\"runtime\":\"/run/user/1000\"}")
+        (with-current-buffer (find-file-noselect note)
+          (cl-letf (((symbol-function 'executable-find) (lambda (_) "/nix/store/mock-org-open-pdf"))
+                    ((symbol-function 'make-process)
+                     (lambda (&rest arguments)
+                       (setq captured-command (plist-get arguments :command)
+                             captured-wayland (getenv "WAYLAND_DISPLAY"))
+                       'mock-process)))
+            (kit/org-zathura-follow "paper%20with%20spaces.pdf::page=12"))
+          (cl-assert (equal captured-command
+                            (list "/nix/store/mock-org-open-pdf" pdf "12")))
+          (cl-assert (equal captured-wayland "/mnt/wslg/runtime-dir/wayland-0"))
+          (cl-assert (not (getenv "WAYLAND_DISPLAY")))
+          (kill-buffer (current-buffer))))
+    (set-frame-parameter frame 'kit-org-pdf-launch-context old-context)))
+
+;; Image capture is writable and produces a relocatable path beside its note.
+(let* ((directory (expand-file-name "note-assets-test" (getenv "HOME")))
+       (note (expand-file-name "paper.org" directory))
+       (image (expand-file-name "source.png" directory))
+       (copy (expand-file-name "relocated" (getenv "HOME"))))
+  (make-directory directory t)
+  (with-temp-file note (insert "#+title: Image link test\n\n"))
+  (with-temp-file image (insert "test image bytes"))
+  (with-current-buffer (find-file-noselect note)
+    (org-mode)
+    (kit/org-download-use-note-assets)
+    (let ((org-download-display-inline-images nil))
+      (org-download-image (concat "file://" image)))
+    (save-buffer)
+    (let* ((tree (org-element-parse-buffer))
+           (path (org-element-map tree 'link
+                   (lambda (link) (org-element-property :path link)) nil t)))
+      (cl-assert (and path (not (file-name-absolute-p path))))
+      (cl-assert (file-exists-p (expand-file-name path directory)))
+      (make-directory copy t)
+      (let ((content (buffer-string))
+            (destination (expand-file-name path copy)))
+        (with-temp-file (expand-file-name "paper.org" copy)
+          (insert content))
+        (make-directory (file-name-directory destination) t)
+        (copy-file (expand-file-name path directory) destination))
+      (cl-assert (file-exists-p
+                  (expand-file-name path (file-name-directory
+                                          (expand-file-name "paper.org" copy))))))
+    (kill-buffer (current-buffer))))
 
 (defun kit/test-render (formula file options)
   (condition-case err
@@ -193,7 +276,13 @@
       (with-current-buffer buffer (insert "Test content") (org-capture-finalize)))
     (org-roam-db-sync)
     (let ((node (org-roam-node-from-title-or-alias title)))
-      (cl-assert (and node (org-roam-node-id node))))))
+      (cl-assert (and node (org-roam-node-id node)))
+      (when (equal key "r")
+        (let ((paper-note (kit/test-file-text (org-roam-node-file node))))
+          (dolist (expected '(":CITEKEY:" ":DOI:" ":PDF:" "* Claims and evidence"
+                              "* Method and assumptions" "* Limitations"
+                              "zathura:relative/path/to/paper.pdf::page=1"))
+            (cl-assert (string-match-p (regexp-quote expected) paper-note))))))))
 (dolist (key '("d" "c" "e"))
   (cl-assert (assoc key org-roam-capture-templates)))
 t

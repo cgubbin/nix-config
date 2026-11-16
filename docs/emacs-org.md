@@ -257,6 +257,74 @@ Opening or exporting the document does not run either block. The generated
 figure is linked relatively, and the bibliography is local to the example.
 Engineering project and ADR templates are separate from project-local TODOs.
 
+## Reading papers in Work WSL
+
+The WSL profile is terminal-first. Keep PDFs under the Work Org root (for
+example `bibliography/papers/`) or beside the reading note, then use a relative
+Org link with a page suffix:
+
+```org
+[[zathura:bibliography/papers/example.pdf::page=12][Open at page 12]]
+```
+
+Press `C-c C-o` on the link. Emacs hands the decoded local path and page number
+to the Nix-packaged `org-open-pdf` helper, which validates the file and the
+current WSLg/X11 socket before calling Zathura. Paths containing spaces are
+percent-encoded in the Org link (or created using Org's link insertion). The
+launcher passes each argument separately and never evaluates shell text. The
+daemon remains display-independent; WSLg variables are attached to the client
+frame and used only by the Zathura child process. Without a usable WSLg socket,
+the command prints a short diagnostic. You can still open the PDF manually in
+Zathura and record page-linked notes.
+
+Org-noter is installed declaratively and is useful when using a graphical Emacs
+frame: open the paper note, then use **SPC m n**. It requires an Emacs PDF
+viewer such as PDF Tools and is deliberately unavailable in the terminal-only
+WSL frame. Zathura is an external viewer and Org-noter cannot control its
+scroll position; use the `zathura:` links for WSL page navigation.
+
+For figures, `org-download` stores captured images in an `assets/` directory
+beside the current note and inserts relative links. In a graphical session,
+use its image/screenshot commands (or paste an image when the clipboard offers
+an image MIME type); terminal-only WSL sessions do not provide graphical
+clipboard capture. Save the image to a file and use `org-download`'s file
+insertion command or link it with `[[file:assets/figure.png]]`. Keep source
+figures and PDFs in the note tree so it can be backed up or moved as a unit.
+
+## Linear and GitHub references
+
+Org is the private notes and personal planning layer. Linear remains
+authoritative for shared issue status; GitHub remains authoritative for PR and
+CI status. Use ordinary Org links and keep identifiers as properties on a
+project or investigation note, for example:
+
+```org
+:PROPERTIES:
+:LINEAR_ID: TEAM-123
+:LINEAR_URL: https://linear.app/workspace/issue/TEAM-123/short-title
+:GITHUB_REPO: owner/repository
+:GITHUB_ISSUE: 42
+:GITHUB_PR: 84
+:END:
+
+Linear: [[https://linear.app/workspace/issue/TEAM-123/short-title][TEAM-123]]
+Issue: [[https://github.com/owner/repository/issues/42][#42]]
+Pull request: [[https://github.com/owner/repository/pull/84][PR #84]]
+Commit: [[https://github.com/owner/repository/commit/0123456789abcdef][0123456]]
+```
+
+Open an Org link with `C-c C-o`. Doom's Magit/Forge integration is available
+for repository issue and PR discussions (`M-x forge-list-topics` after opening
+the repository in Magit). Forge requires GitHub credentials configured outside
+Nix, through Emacs `auth-source` or the host's existing credential helper. Do
+not place tokens in Org files, Nix expressions, or the Nix store. Linear links
+are plain HTTPS links; this feature does not call the Linear API.
+
+There is no issue import, synchronization, or write-back. Store only the
+context needed for a note and update shared state in Linear/GitHub. For durable
+source references, prefer a GitHub commit permalink; local repository paths
+and branch names can change.
+
 ## Validation and manual checks
 
 ```sh

@@ -1,5 +1,5 @@
 _: {
-  flake.modules.homeManager."home-kit-features-cli-tools" =
+  flake.modules.homeManager."home-kit-features-cli-tools-core" =
     {
       lib,
       pkgs,
@@ -36,16 +36,10 @@ _: {
           noti
           killall
           wget
-          tdf
-          see-cat
           rsync
-          # vault-tasks
-          television
-          restic
           unar
 
           hexyl
-          nasm
           broot
 
           # Yazi functionality
@@ -55,34 +49,45 @@ _: {
           resvg
           imagemagick
 
-          # Nix linting
-          alejandra
-          deadnix
-          nixd
-          nixfmt
-          statix
-
-          age
-          sops
-          aerc
-          ast-grep
-          hunspell
-          semgrep
-          shellcheck
-          treefmt
-          zathura
         ]
-        ++ optionals pkgs.stdenv.isLinux [
+        ++ optionals pkgs.stdenv.hostPlatform.isLinux [
           xclip
-          grim
-          slurp
-          valgrind
-          bandwhich
-          proximity-sort
         ];
       programs.eza = {
         enable = true;
         enableFishIntegration = true;
       };
     };
+  flake.modules.homeManager."home-kit-features-cli-tools-extras" = { lib, pkgs, ... }: {
+    home.packages =
+      with pkgs;
+      [
+        tdf
+        see-cat
+        television
+        restic
+        nasm
+        alejandra
+        deadnix
+        nixd
+        nixfmt
+        statix
+        age
+        sops
+        aerc
+        ast-grep
+        hunspell
+        semgrep
+        shellcheck
+        treefmt
+        zathura
+      ]
+      ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
+        grim
+        slurp
+        valgrind
+        bandwhich
+        proximity-sort
+      ];
+  };
 }

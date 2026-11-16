@@ -4,6 +4,8 @@ let
 in
 {
   flake.modules.homeManager."home-kit-kitsune" = { ... }: {
+    programs.firefox.profiles.kit.settings."security.enterprise_roots.enabled" = true;
+
     services.syncthing.settings.devices = {
       pi5.addresses = [
         "tcp://192.168.1.3:22000"

@@ -44,7 +44,7 @@ _: {
         ''}/bin/waybar-${name}";
     in
     {
-      config = mkIf pkgs.stdenv.isLinux {
+      config = mkIf pkgs.stdenv.hostPlatform.isLinux {
         stylix.targets.waybar.enable = true;
         programs.waybar = mkIf cfg.wayland.enable {
           enable = true;

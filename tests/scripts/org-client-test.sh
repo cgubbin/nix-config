@@ -29,6 +29,7 @@ chmod +x "$stub/emacsclient"
 export HOME="$scratch/home"
 export XDG_RUNTIME_DIR="$runtime"
 export ORG_CLIENT_TEST_LOG="$log"
+export ORG_SYSTEMCTL_TEST_LOG="$scratch/systemctl-args"
 mkdir -p "$HOME"
 
 run_launcher() (
@@ -42,7 +43,7 @@ run_launcher() (
   local terminalClient=true
   # These stubs are invoked by the sourced production script.
   # shellcheck disable=SC2329
-  systemctl() { return 0; }
+  systemctl() { printf '%s\n' "$*" >> "$ORG_SYSTEMCTL_TEST_LOG"; return 0; }
   # shellcheck disable=SC2329
   timeout() { shift; "$@"; }
   cd "$2"
@@ -61,10 +62,15 @@ run_launcher project-todo ignored "$repo"
 run_launcher project-agenda ignored "$repo"
 run_launcher project-capture ignored "$repo" src/main.c 17
 grep -F -- '--frame-parameters=' "$log" >/dev/null
+grep -F 'kit-org-pdf-launch-context' "$log" >/dev/null
 grep -F 'project-todo' "$log" >/dev/null
 grep -F 'project-agenda' "$log" >/dev/null
 grep -F 'src/main.c' "$log" >/dev/null
 grep -F '17' "$log" >/dev/null
+if grep -F 'set-environment' "$ORG_SYSTEMCTL_TEST_LOG" >/dev/null; then
+  echo "terminal Org client changed the systemd user manager environment" >&2
+  exit 1
+fi
 grep -F "$repo" "$log" >/dev/null
 if grep -F 'blob/' "$log" >/dev/null; then
   echo "a local repository unexpectedly received a remote permalink" >&2

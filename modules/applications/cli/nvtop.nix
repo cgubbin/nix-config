@@ -11,7 +11,7 @@ _: {
       cfg = config.home-config.cli;
     in
     {
-      home.packages = mkIf (cfg.nvTop.enable && pkgs.stdenv.isLinux) (
+      home.packages = mkIf (cfg.nvTop.enable && pkgs.stdenv.hostPlatform.isLinux) (
         with pkgs;
         [
           nvtopPackages.nvidia

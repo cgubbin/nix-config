@@ -10,6 +10,10 @@ state versions and machine settings belong to the consumer.
 | shared-git | aliases, pull/rebase, main default, Delta | Git name/email/github identity; no forced identity or SSH agent |
 | shared-shells | fish, Nushell, direnv and integrations | secret sourcing, Windows environment, project-template availability |
 | shared-cli | CLI packages and Atuin/Bat/FZF/Yazi/etc. | history sync choices, shell binding overrides; no cloud/AI service selection |
+| shared-cli-core | Common terminal tools and integrations, without Atuin | Consumer owns other history services and shell settings |
+| shared-cli-extras | Optional larger personal CLI package set | Review packages and compatibility on the consumer |
+| shared-cli-atuin | Atuin and its existing personal sync settings | Do not import for work |
+| shared-cli-review | Difftastic and nbdime for explicit code and notebook diffs | Does not configure global Git drivers |
 | shared-editor | Nixvim baseline, plugins, snippets | matching Nixvim Home Manager companion module; work-only extensions and personal vault configuration |
 | shared-doom-emacs | Declarative Doom, Org capture/agenda/roam, optional managed daemon | Linux consumer; independent writable Org root; optional graphical session integration; see [Doom/Org guide](emacs-org.md) |
 | shared-zellij | Complete Zellij config, layouts, Ctrl-b Org floating panes, Catppuccin Mocha | Complete replacement for the consumer's Zellij config and layouts; Org actions require `shared-doom-emacs` |
@@ -23,6 +27,26 @@ package). A missing or nonexistent configuration directory produces a warning
 when the shortcut is used. Quarto sync remains disabled unless its package is
 supplied. Clipboard and image behavior still need a real terminal check.
 
+`shared-cli` remains the compatibility aggregate of core, extras, and Atuin;
+Kitsune therefore keeps its existing Atuin settings. For work import
+`shared-cli-core` instead, and do not import `shared-cli` or
+`shared-cli-atuin`. Local Fish or Nushell history is permitted; the shared
+core configures no offsite history synchronization. Also inspect the work
+starter modules and existing user configuration for other history services:
+the shared export cannot control independently imported modules.
+
+Fish's `rerun N` previews the last N commands; `rerun --execute N` explicitly
+replays them. Review commands and the current directory before execution.
+`mkproj` creates an `.envrc` if needed but does not approve it: review the
+file and run `direnv allow` yourself. Shared Fish no longer supplies the old
+machine-specific rebuild aliases; define host-specific commands locally.
+
+`shared-cli-review` installs `difft` for syntax-aware code comparisons and
+`nbdiff`/`nbshow` for notebook-aware comparisons and inspection. For example,
+run `difft old.py new.py` or `nbdiff old.ipynb new.ipynb`. These commands do
+not change Git configuration. Review work policy and existing tools before
+adding a secret scanner; no scanner or network service is enabled by this export.
+
 Stable fixture uses this repository's locked stable nixpkgs/Home Manager/Nixvim.
 Work-like fixture uses nixpkgs `319e4cebef10cbb636c6ea392137b52ad105336a`,
 Home Manager `640725978b99076e18e069f6e7d2959124584f8f`, and Nixvim
@@ -31,14 +55,47 @@ Exact hashes and companion dependencies are recorded in flake.lock. Support is
 for tested pins; run compatibility checks when updating either repository.
 
 Minimal synthetic consumers are available as `homeConfigurations.shared-stable`
-and `homeConfigurations.shared-unstable`. They import all four exports with a
-synthetic identity and an additional editor global. They do not instantiate the
+and `homeConfigurations.shared-unstable`. They import the common exports with a
+synthetic identity and an additional editor global; the stable fixture uses
+the compatibility CLI aggregate and the work-like fixture uses the core CLI.
+The stable core is also checked separately. They do not instantiate the
 Kitsune host or configure private secrets, company inputs, or local workbench.
 The producer's flake metadata still lists its private host input; public modules
 must not force it. This is not a promise that the input graph contains no private
 metadata.
 
 ## Staged work adoption (follow-up, not performed here)
+
+### Work Git, CLI and Zellij patch
+
+The reviewable patch at
+`openspec/changes/share-work-safe-cli-and-shells/work-consumer.patch` targets
+work revision `287e505302c2ae758583c44e97bb739a88a32c25`. It imports
+`shared-git`, `shared-cli-core`, `shared-cli-review`, and `shared-zellij`,
+removes corresponding local definitions, and preserves work Git identity and
+ignores, local non-core packages and package overrides. Its targeted Bat style
+override preserves work's existing preference. The work Fish, Nushell, direnv,
+Windows wrappers and secrets remain local. The patch selects neither Atuin nor
+`shared-cli`.
+
+The patch was generated in a disposable checkout and `git apply --check`
+passed against that snapshot. This does not evaluate the private company starter
+or prove the current work host matches the snapshot. In particular, inspect
+what the removed starter `cli-tools` and `git` modules provided, as well as any
+other imported service or shell integration that could synchronize history.
+Preserve required company settings explicitly before applying. Verify Zellij
+and Org bindings, local shell history and the absence of Atuin or other offsite
+history services on the real host.
+
+On the work laptop, review local changes and the patch, check its applicability
+with `git apply --check <patch-path>`, and apply it only after that review.
+Update the existing `personal-features` input in `modules/users/kit.nix` to a
+published revision containing these exports, regenerate `flake.nix` with
+`nix run .#write-flake`, and update that input's lock entry. Review all generated
+and lockfile changes, including unrelated updates, before running
+`nix build --no-link .#nixosConfigurations.work.config.system.build.toplevel`.
+Activate only after a successful build and review. Keep the prior work source
+and lockfile commits to restore and rebuild if rollback is needed.
 
 ### Work editor patch
 

@@ -10,17 +10,36 @@ in
       hm."home-kit-global-tools-direnv"
     ];
   };
-  flake.modules.homeManager.shared-cli = {
+  flake.modules.homeManager.shared-cli-core = {
     imports = [
-      hm."home-kit-features-cli-atuin"
       hm."home-kit-features-cli-bat"
       hm."home-kit-features-cli-bottom"
       hm."home-kit-features-cli-fzf"
-      hm."home-kit-features-cli-tools"
+      hm."home-kit-features-cli-tools-core"
       hm."home-kit-features-cli-navi"
       hm."home-kit-features-cli-skim"
       hm."home-kit-features-cli-yazi"
       hm."home-kit-features-cli-zoxide"
+    ];
+  };
+  flake.modules.homeManager.shared-cli-atuin = {
+    imports = [ hm."home-kit-features-cli-atuin" ];
+  };
+  flake.modules.homeManager.shared-cli-extras = {
+    imports = [ hm."home-kit-features-cli-tools-extras" ];
+  };
+  flake.modules.homeManager.shared-cli-review = { pkgs, ... }: {
+    home.packages = [
+      pkgs.difftastic
+      pkgs.python3Packages.nbdime
+    ];
+  };
+  # Keep the original aggregate for existing consumers.
+  flake.modules.homeManager.shared-cli = {
+    imports = [
+      hm.shared-cli-core
+      hm.shared-cli-extras
+      hm.shared-cli-atuin
     ];
   };
   flake.modules.homeManager.shared-editor = { config, lib, ... }: {

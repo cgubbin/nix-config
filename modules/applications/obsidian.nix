@@ -1,7 +1,7 @@
 _: {
   flake.modules.homeManager."home-kit-global-tools-obsidian" = { pkgs, ... }: {
     programs.obsidian = {
-      enable = pkgs.stdenv.isLinux;
+      enable = pkgs.stdenv.hostPlatform.isLinux;
       vaults.notes.target = "Obsidian";
 
       defaultSettings.app = {

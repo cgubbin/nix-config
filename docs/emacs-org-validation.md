@@ -98,6 +98,36 @@ real Hyprland focus, Kitsune shortcuts, WSL shutdown/start behavior or WSLg.
 Those host-level checks remain pending and are described in
 [`emacs-handoff.md`](emacs-handoff.md).
 
+## PDF reading and external issue references (OpenSpec: `add-pdf-and-issue-workflows`)
+
+Verified the pinned consumer package attributes and built the stable and
+unstable Doom profiles with Nix-managed `org-noter`, `pdf-tools`,
+`org-download`, Forge, and Zathura. Relative to the pre-change profiles, the
+measured closure increased by about 223 MiB for stable and 473 MiB for
+unstable; these figures include the PDF/image tools and Zathura. The offline
+startup test loads the packages without installing or fetching anything.
+
+The headless suite tests writable per-note image assets and relative links
+after relocating a note tree; `zathura:` link decoding for a path with spaces,
+positive page argument separation, and frame-local WSLg environment; local PDF
+launcher validation with mocked Zathura, invalid pages, missing files, and
+missing/stale sockets; external Linear Org links; paper capture metadata and
+page-link template content; Org-noter's terminal guard; Citar; Forge loading;
+and existing project workflows. The launcher and client scripts pass
+ShellCheck. Strict OpenSpec validation passes.
+
+Forge is Nix-built and loaded in the offline profile. No live GitHub account or
+credential was used, so authenticated Forge browsing remains a consumer-side
+manual check after configuring Emacs `auth-source` or the host credential
+helper. The config passes no credentials into Nix expressions, builds, or the
+store. Linear support is plain HTTPS links. No issue import, Org overwrite, or
+bidirectional synchronization exists.
+
+Neither real WSLg/Zathura display integration nor graphical Org-noter behavior
+was available in the build environment. Follow the manual Work/WSL steps in
+[`emacs-handoff.md`](emacs-handoff.md); the `zathura:` launcher reports a
+diagnostic when it cannot find a usable socket.
+
 ## Final integration results
 
 All selected checks passed on 2026-11-09:

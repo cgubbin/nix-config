@@ -98,6 +98,7 @@ in
             chmod -R u+w "$HOME/scientific-example"
             chmod 700 "$XDG_RUNTIME_DIR"
             bash ${../../tests/scripts/org-client-test.sh} ${../../modules/applications/emacs/scripts/org-client.sh}
+            bash ${../../tests/scripts/org-open-pdf-test.sh} ${../../modules/applications/emacs/scripts/org-open-pdf.sh}
             app=${smoke.config.programs.doom-emacs.finalEmacsPackage}/bin
             "$app/emacs" --fg-daemon="$XDG_RUNTIME_DIR/server" > daemon.log 2>&1 &
             daemon=$!

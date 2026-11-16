@@ -11,7 +11,7 @@ _: {
       cfg = config.home-config.gui;
     in
     {
-      home.packages = mkIf (cfg.utils.enable && pkgs.stdenv.isLinux) (
+      home.packages = mkIf (cfg.utils.enable && pkgs.stdenv.hostPlatform.isLinux) (
         with pkgs;
         [
           _1password-gui
