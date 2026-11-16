@@ -2,9 +2,11 @@
 --
 -- Python buffers use Jupytext percent cells (`# %%`): a marker line starts a
 -- cell, `# %% [markdown]` cells are not executed, and non-blank text before the
--- first marker is a cell of its own. Other notebook buffers (Quarto, Markdown
--- from Jupytext) keep quarto-nvim's runner. Every action makes sure the buffer
--- has its project kernel first (kit.kernel).
+-- first marker is a cell of its own. Markdown and Quarto buffers (including
+-- .ipynb files opened through Jupytext) use fenced code chunks (```python,
+-- ```{python}); the opening fence plays the marker's role and chunks in other
+-- languages are skipped. Every action sends code to the buffer's project kernel
+-- through Molten, starting it first (kit.kernel).
 local M = {}
 
 local function is_marker(line)
@@ -46,6 +48,34 @@ function M.parse(lines)
   return cells
 end
 
+local python_langs = { python = true, python3 = true, py = true, ipython = true }
+
+-- Fenced code chunks: ```lang / ```{lang ...} to the closing ```. Prose between
+-- chunks is not a cell. An unclosed chunk runs to the end of the buffer.
+function M.parse_fenced(lines)
+  local cells = {}
+  local open
+  for i, line in ipairs(lines) do
+    if open then
+      if line:match("^%s*```+%s*$") then
+        open.last = i - 1
+        cells[#cells + 1] = open
+        open = nil
+      end
+    else
+      local lang = line:match("^%s*```+%s*{?%s*([%w_]*)")
+      if lang then
+        open = { marker = i, first = i + 1, last = i, markdown = not python_langs[lang:lower()] }
+      end
+    end
+  end
+  if open then
+    open.last = #lines
+    cells[#cells + 1] = open
+  end
+  return cells
+end
+
 -- Index of the cell containing line (a marker belongs to the cell it starts).
 function M.index(cells, line)
   local found
@@ -60,8 +90,13 @@ local function runnable(cell)
   return not cell.markdown and cell.first <= cell.last
 end
 
-local function buffer_cells(buf)
-  return M.parse(vim.api.nvim_buf_get_lines(buf, 0, -1, false))
+local function percent(buf)
+  return vim.bo[buf].filetype == "python"
+end
+
+function M.cells(buf)
+  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  return percent(buf) and M.parse(lines) or M.parse_fenced(lines)
 end
 
 local function kernel_name(buf, info)
@@ -73,6 +108,7 @@ end
 local function evaluate(buf, info, ranges)
   local name = kernel_name(buf, info)
   if not name then return vim.notify("No notebook kernel attached", vim.log.levels.ERROR) end
+  if #ranges == 0 then return vim.notify("No code cell here") end
   vim.api.nvim_buf_call(buf, function()
     for _, r in ipairs(ranges) do
       vim.fn.MoltenEvaluateRange(name, r[1], r[2])
@@ -84,55 +120,37 @@ local function with_kernel(buf, fn)
   require("kit.kernel").ensure(buf, function(info) fn(info) end)
 end
 
-local function percent(buf)
-  return vim.bo[buf].filetype == "python"
+local function resolve(buf)
+  return (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
 end
 
-local function quarto_runner()
-  return require("quarto.runner")
-end
-
--- Next cell start (percent) or next fenced code chunk (Quarto/Markdown).
-local function next_line(buf, line)
-  if percent(buf) then
-    local cells = buffer_cells(buf)
-    local i = M.index(cells, line)
-    local nxt = cells[(i or 0) + 1]
-    return nxt and (nxt.first <= nxt.last and nxt.first or (nxt.marker or nxt.first)) or nil
-  end
-  -- First line inside the next ```{lang} chunk below the cursor.
-  local lines = vim.api.nvim_buf_get_lines(buf, line, -1, false)
-  for offset, text in ipairs(lines) do
-    if text:match("^%s*```%s*{") then return line + offset + 1 end
-  end
-  return nil
+-- First content line of the cell after the one containing line.
+local function next_line(cells, line)
+  local nxt = cells[(M.index(cells, line) or 0) + 1]
+  if not nxt then return nil end
+  return nxt.first <= nxt.last and nxt.first or (nxt.marker or nxt.first)
 end
 
 function M.run_cell(buf, advance)
-  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
+  buf = resolve(buf)
   local win = vim.api.nvim_get_current_win()
   local line = vim.api.nvim_win_get_cursor(win)[1]
   with_kernel(buf, function(info)
-    if percent(buf) then
-      local cells = buffer_cells(buf)
-      local cell = cells[M.index(cells, line) or 0]
-      if cell and runnable(cell) then evaluate(buf, info, { { cell.first, cell.last } }) end
-    else
-      quarto_runner().run_cell()
-    end
+    local cells = M.cells(buf)
+    local cell = cells[M.index(cells, line) or 0]
+    if cell and runnable(cell) then evaluate(buf, info, { { cell.first, cell.last } }) end
     if advance and vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == buf then
-      local target = next_line(buf, line)
+      local target = next_line(cells, line)
       if target then vim.api.nvim_win_set_cursor(win, { math.min(target, vim.api.nvim_buf_line_count(buf)), 0 }) end
     end
   end)
 end
 
 function M.run_above(buf)
-  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
+  buf = resolve(buf)
   local line = vim.api.nvim_win_get_cursor(0)[1]
   with_kernel(buf, function(info)
-    if not percent(buf) then return quarto_runner().run_above() end
-    local cells = buffer_cells(buf)
+    local cells = M.cells(buf)
     local ranges = {}
     for i = 1, (M.index(cells, line) or 0) do
       if runnable(cells[i]) then ranges[#ranges + 1] = { cells[i].first, cells[i].last } end
@@ -142,11 +160,10 @@ function M.run_above(buf)
 end
 
 function M.run_all(buf)
-  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
+  buf = resolve(buf)
   with_kernel(buf, function(info)
-    if not percent(buf) then return quarto_runner().run_all() end
     local ranges = {}
-    for _, cell in ipairs(buffer_cells(buf)) do
+    for _, cell in ipairs(M.cells(buf)) do
       if runnable(cell) then ranges[#ranges + 1] = { cell.first, cell.last } end
     end
     evaluate(buf, info, ranges)
@@ -154,29 +171,24 @@ function M.run_all(buf)
 end
 
 function M.run_line(buf)
-  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
+  buf = resolve(buf)
   local line = vim.api.nvim_win_get_cursor(0)[1]
-  with_kernel(buf, function(info)
-    if not percent(buf) then return quarto_runner().run_line() end
-    evaluate(buf, info, { { line, line } })
-  end)
+  with_kernel(buf, function(info) evaluate(buf, info, { { line, line } }) end)
 end
 
 function M.run_range(buf, first, last)
-  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
-  with_kernel(buf, function(info)
-    if not percent(buf) then return quarto_runner().run_range() end
-    evaluate(buf, info, { { first, last } })
-  end)
+  buf = resolve(buf)
+  with_kernel(buf, function(info) evaluate(buf, info, { { first, last } }) end)
 end
 
 -- Moves the cursor to the next (count > 0) or previous cell.
 function M.jump(buf, count)
-  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
-  local cells = buffer_cells(buf)
+  buf = resolve(buf)
+  local cells = M.cells(buf)
+  if #cells == 0 then return vim.notify("No cells in this buffer") end
   local i = M.index(cells, vim.api.nvim_win_get_cursor(0)[1]) or 0
   local target = cells[math.max(1, math.min(#cells, i + count))]
-  if target then vim.api.nvim_win_set_cursor(0, { target.marker or target.first, 0 }) end
+  vim.api.nvim_win_set_cursor(0, { target.marker or target.first, 0 })
 end
 
 return M

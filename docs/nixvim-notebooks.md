@@ -13,10 +13,13 @@ repository. Specified by the OpenSpec change `improve-nixvim-notebooks`.
 - **`.ipynb` (import/export).** Opening an `.ipynb` converts it to a temporary
   Markdown buffer (never a sibling file in the project). Saving writes the cells
   back with `jupytext --update` and then the running kernel's outputs into the
-  same file. Use explicit Jupytext commands to pair or convert files, for example
+  same file. Outputs already saved in the notebook are shown on request (`L` in
+  the menu, `:NotebookLoadOutputs`): loading them automatically raced with the
+  first cell run and replaced its fresh output. Use explicit Jupytext commands
+  to pair or convert files, for example
   `jupytext --set-formats ipynb,py:percent notebook.ipynb`; the editor never
   creates a paired file on its own.
-- **`.qmd` / `.md`** run through quarto-nvim's code runner.
+- **`.qmd` / `.md`** and `.ipynb` buffers use fenced code chunks (```` ```python ````, ```` ```{python} ````) as cells; chunks in other languages are skipped.
 
 ## Kernels
 
@@ -39,6 +42,10 @@ A notebook's kernel is the project's interpreter, not Neovim's.
   add it (`uv add --dev ipykernel`, `pixi add ipykernel`); an unapproved
   `.envrc` asks for `direnv allow`.
 - Buffers in the same project share one kernel.
+- The first run waits until the kernel is ready before sending code. Molten's
+  readiness check discards kernel messages that arrive earlier, which used to
+  lose the first cell's output. Loading the project environment can take a
+  while (project hooks), so a "Starting notebook kernel" message appears first.
 
 ## Controls
 
@@ -52,6 +59,7 @@ A notebook's kernel is the project's interpreter, not Neovim's.
 | `r` | re-evaluate cell | `n` / `p` | next / previous cell |
 | `o` / `h` | open / hide output | `d` | delete cell output |
 | `x` | open output in browser | `e` | save outputs to the `.ipynb` |
+| `L` | load outputs saved in the `.ipynb` | | |
 | `i` | start project kernel | `k` | choose kernel environment |
 | `I` | interrupt | `R` | restart kernel |
 

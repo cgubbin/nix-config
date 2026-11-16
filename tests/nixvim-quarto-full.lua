@@ -7,7 +7,7 @@ assert(vim.g.quarto_sync_fixture_setups == 1, "Quarto fixture did not initialize
 local mapping = vim.fn.maparg(",rp", "n", false, true)
 assert(type(mapping.callback) == "function", "preview mapping missing")
 mapping.callback()
-assert(vim.g.quarto_sync_fixture_preview == dir .. "/copy-of-preview with spaces.qmd")
+assert(vim.g.quarto_sync_fixture_preview == first, "preview should target the document itself, got " .. tostring(vim.g.quarto_sync_fixture_preview))
 vim.cmd("enew")
 vim.cmd("set filetype=markdown")
 assert(vim.g.quarto_sync_fixture_setups == 1, "Quarto fixture initialized more than once")

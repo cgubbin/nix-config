@@ -135,7 +135,8 @@ _: {
                   _n_: next cell    _p_: prev cell    _o_: open output
                   _h_: hide output  _d_: delete output _x_: browser
                   _i_: kernel       _k_: choose env   _I_: interrupt
-                  _R_: restart      _e_: export       _<esc>_/_q_: exit
+                  _R_: restart      _e_: save outputs _L_: load saved
+                  ^^                ^^                _<esc>_/_q_: exit
                 '';
 
                 heads =
@@ -194,6 +195,11 @@ _: {
                       "e"
                       { __raw = ''function() require("kit.kernel").export(0) end''; }
                       { desc = "export outputs"; }
+                    ]
+                    [
+                      "L"
+                      { __raw = ''function() require("kit.kernel").load_outputs(0) end''; }
+                      { desc = "load saved outputs"; }
                     ]
                   [
                     "<esc>"

@@ -140,6 +140,9 @@ function M.start(buf, callback)
   buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
   callback = callback or function() end
   local root = require("kit.project").root(vim.api.nvim_buf_get_name(buf))
+  -- Loading the project environment can take a while (project hooks), so say
+  -- something now rather than after it finishes.
+  vim.notify("Starting notebook kernel for " .. vim.fn.fnamemodify(root, ":~") .. " …")
   M.prepare(root, function(info, err)
     if not info then
       vim.notify("Notebook kernel: " .. err, vim.log.levels.ERROR)
@@ -147,51 +150,86 @@ function M.start(buf, callback)
     end
     if not vim.api.nvim_buf_is_valid(buf) then return callback(nil, "buffer closed") end
     local running = vim.fn.MoltenRunningKernels(false)
+    local shared = contains(running, info.name)
+
+    -- Report the kernel only once Molten has seen it ready. Molten's readiness
+    -- check (jupyter_client's wait_for_ready) flushes the kernel's IOPub
+    -- channel, so the output of a cell sent before then is discarded and the
+    -- cell stays held forever. Callers usually run a cell straight away.
+    local finished = false
+    local function finish(value, err)
+      if finished then return end
+      finished = true
+      if not value then vim.notify("Notebook kernel: " .. err, vim.log.levels.ERROR) end
+      callback(value, err)
+    end
+    local ready
+    if not shared then
+      ready = vim.api.nvim_create_autocmd("User", {
+        pattern = "MoltenKernelReady",
+        callback = function(ev)
+          if ev.data and contains(attached(buf), ev.data.kernel_id) then
+            vim.schedule(function() finish(info) end)
+            return true
+          end
+        end,
+      })
+    end
+
     local ok, init_err = pcall(vim.api.nvim_buf_call, buf, function()
-      vim.cmd("MoltenInit " .. (contains(running, info.name) and "shared " or "") .. info.name)
+      vim.cmd("MoltenInit " .. (shared and "shared " or "") .. info.name)
     end)
     -- Molten reports init failures as notifications, not errors.
     if ok and not contains(attached(buf), info.name) then
       ok, init_err = false, "Molten could not start " .. info.name .. " (" .. info.python .. "); see its notification for the cause"
     end
     if not ok then
-      vim.notify("Notebook kernel: " .. tostring(init_err), vim.log.levels.ERROR)
-      return callback(nil, tostring(init_err))
+      if ready then pcall(vim.api.nvim_del_autocmd, ready) end
+      return finish(nil, tostring(init_err))
     end
     vim.b[buf].kit_kernel = info
     vim.notify("Notebook kernel " .. info.name .. ": " .. info.python)
-    M.import(buf, info.name)
-    callback(info)
+    if shared then return finish(info) end
+    vim.defer_fn(function()
+      if finished then return end
+      pcall(vim.api.nvim_del_autocmd, ready)
+      finish(nil, info.name .. " did not become ready within " .. M.ready_timeout / 1000 .. " s")
+    end, M.ready_timeout)
   end)
 end
+
+M.ready_timeout = 60000
 
 local function notebook_path(buf)
   local path = vim.api.nvim_buf_get_name(buf)
   return path:match("%.ipynb$") and path or nil
 end
 
--- Shows outputs stored in an .ipynb once a kernel is attached (Molten keeps
--- outputs per kernel, so there is nothing to show before one starts).
--- Runs after MoltenInit returns: straight after init Molten's host can still be
--- busy starting the kernel and rejects the request ("Request from non-main
--- thread"), so retry briefly before reporting a failure.
+-- Shows outputs stored in an .ipynb in the attached kernel, then calls done().
+-- Explicit only (:NotebookLoadOutputs): Molten applies the import
+-- asynchronously and it deletes overlapping cells, so importing when a kernel
+-- starts would wipe the output of a cell run straight afterwards. Molten's host
+-- can also be busy just after init and reject the request ("Request from
+-- non-main thread"), so retry briefly before giving up.
 M.import_retries = 10
 M.import_delay = 200
 
-function M.import(buf, name, attempt)
+function M.import(buf, name, done, attempt)
+  done = done or function() end
   attempt = attempt or 1
   local path = notebook_path(buf)
-  if not path or vim.fn.filereadable(path) ~= 1 then return end
+  if not path or vim.fn.filereadable(path) ~= 1 then return done() end
   vim.defer_fn(function()
-    if not vim.api.nvim_buf_is_valid(buf) then return end
+    if not vim.api.nvim_buf_is_valid(buf) then return done() end
     local ok, err = pcall(vim.api.nvim_buf_call, buf, function()
       vim.cmd("MoltenImportOutput " .. vim.fn.fnameescape(path) .. " " .. name)
     end)
-    if ok then return end
+    if ok then return done() end
     if tostring(err):find("non-main thread", 1, true) and attempt < M.import_retries then
-      return M.import(buf, name, attempt + 1)
+      return M.import(buf, name, done, attempt + 1)
     end
     vim.notify("Could not load stored outputs: " .. tostring(err), vim.log.levels.WARN)
+    done()
   end, attempt == 1 and 0 or M.import_delay)
 end
 
@@ -252,6 +290,18 @@ function M.commands()
     { desc = "Choose the project environment and start its kernel" })
   vim.api.nvim_create_user_command("NotebookKernelInfo", function() M.info(0) end,
     { desc = "Show the kernel attached to this buffer" })
+  vim.api.nvim_create_user_command("NotebookLoadOutputs", function() M.load_outputs(0) end,
+    { desc = "Show the outputs saved in this .ipynb (starts the kernel if needed)" })
+end
+
+-- Loads the outputs saved in the buffer's .ipynb into its kernel.
+function M.load_outputs(buf)
+  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
+  if not notebook_path(buf) then return vim.notify("Saved outputs are only available for .ipynb files") end
+  M.ensure(buf, function(info)
+    local name = (info and info.name) or attached(buf)[1]
+    if name then M.import(buf, name) end
+  end)
 end
 
 return M
