@@ -150,6 +150,11 @@ let
           ${runTest ../../tests/nixvim-python-env.lua}
           ${runTest ../../tests/nixvim-python-tools.lua}
           ${runTest ../../tests/nixvim-jupytext-safe.lua}
+          ${runTest ../../tests/nixvim-molten-host.lua}
+          ${runTest ../../tests/nixvim-kernel.lua}
+          ${runTest ../../tests/nixvim-cells.lua}
+          ${runTest ../../tests/nixvim-ipynb-outputs.lua}
+          ${runTest ../../tests/nixvim-render.lua}
           ${runTest ../../tests/nixvim-rust-adapter.lua}
         ${runTest ../../tests/nixvim-neotest-project.lua}
           ${lib.optionalString workFixture (runTest ../../tests/nixvim-quarto-full.lua)}

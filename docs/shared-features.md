@@ -158,6 +158,8 @@ In a separately authorized work-repository workflow:
 
 The shared notebook conversion intentionally uses temporary files: a sibling
 Markdown file is not treated as a paired notebook and is not overwritten.
+Notebook formats, project kernels, controls, plots and rendering are described
+in [Notebooks in the shared editor](nixvim-notebooks.md).
 
 In the shared editor, `<leader>Or` discovers the current project's Just
 recipes and runs the selected recipe as an Overseer task. Discovery is an
