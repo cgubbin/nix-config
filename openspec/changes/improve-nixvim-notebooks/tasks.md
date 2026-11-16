@@ -45,4 +45,6 @@
 ## 7. Validation and adoption
 
 - [ ] 7.1 Run the shared consumer checks (stable and work-like) and a non-activating Kitsune build.
+  - Done: `shared-stable`, `shared-unstable`, `shared-stable-core`, both `*-editor` checks and `pre-commit-check` pass; Kitsune evaluates without warnings and its Nixvim package and config build. Pending: the full Kitsune system build, which compiles codex from source until `cache.numtide.com` is active on the building machine (added in this branch). `nixvim-neotest-project.lua` failed intermittently twice and passed on rerun; it is an existing test this change does not touch.
 - [ ] 7.2 On the work laptop, after the work consumer adopts the revision with `sharedEditor.imageBackend = "sixel"`, repeat the plot, kernel-identity and save/reopen checks in a real project; record sanitized results without copying project contents.
+  - Done before adoption, using the work configuration built against this branch: the generated config selects `sixel` and `image.nvim`, and a real uv worktree project started its kernel in 4.2 s with cells running in its `.venv` interpreter. Pending after switching: plots on screen, run-and-advance, save/reopen of a real `.ipynb`, and opening `:NotebookRender` output in Windows Firefox.
