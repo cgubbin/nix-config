@@ -58,3 +58,11 @@ assert(concurrent.request == same.request, "concurrent loads should share one re
 finish(concurrent.request, { code = 0, stdout = '{"NIXVIM_TEST_PROJECT":"shared"}' })
 assert(same.done and same.value.NIXVIM_TEST_PROJECT == "shared")
 vim.system = original_system
+vim.system = function(command, options, callback)
+  assert(options.timeout >= 60000, "direnv export timeout too short for slow project hooks: " .. tostring(options.timeout))
+  requests[#requests + 1] = { callback = callback, options = options }
+end
+local slow = load("/slow")
+finish(slow.request, { code = 124, signal = 15, stderr = "direnv: loading" })
+assert(slow.err and slow.err:find("timed out", 1, true), "a timeout must be reported as one: " .. tostring(slow.err))
+vim.system = original_system

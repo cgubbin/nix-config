@@ -13,6 +13,9 @@ _: {
           "lua/kit/functions/init.lua".source = ./../../../assets/editor/lua/kit/functions/init.lua;
           "lua/kit/notebook.lua".source = ./../../../assets/editor/lua/kit/notebook.lua;
           "lua/kit/jupytext_safe.lua".source = ./../../../assets/editor/lua/kit/jupytext_safe.lua;
+          "lua/kit/kernel.lua".source = ./../../../assets/editor/lua/kit/kernel.lua;
+          "lua/kit/cells.lua".source = ./../../../assets/editor/lua/kit/cells.lua;
+          "lua/kit/render.lua".source = ./../../../assets/editor/lua/kit/render.lua;
           "lua/kit/project.lua".source = ./../../../assets/editor/lua/kit/project.lua;
           "lua/kit/just.lua".source = ./../../../assets/editor/lua/kit/just.lua;
           "lua/kit/project_env.lua".source = ./../../../assets/editor/lua/kit/project_env.lua;
