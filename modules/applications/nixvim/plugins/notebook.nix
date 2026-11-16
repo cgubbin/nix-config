@@ -81,7 +81,10 @@ _: {
               virt_text_output = true;
               virt_lines_off_by_1 = true;
               output_win_max_height = 12;
-              image_provider = "none";
+              # Plots render through image.nvim, whose backend is the consumer's
+              # sharedEditor.imageBackend; "both" puts them under the cell too.
+              image_provider = "image.nvim";
+              image_location = "both";
             };
           };
 
@@ -127,83 +130,71 @@ _: {
                 };
 
                 hint = ''
-                  _j_: run cell         _l_: run line
-                  _a_: run above        _A_: run all
-                  _r_: re-eval cell     _o_: open output
-                  _h_: hide output      _x_: browser output
-                  _i_: project kernel   _R_: restart kernel
-                  ^^                    _<esc>_/_q_: exit
+                  _j_: run + next   _c_: run cell     _l_: run line
+                  _a_: run above    _A_: run all      _r_: re-evaluate
+                  _n_: next cell    _p_: prev cell    _o_: open output
+                  _h_: hide output  _d_: delete output _x_: browser
+                  _i_: kernel       _k_: choose env   _I_: interrupt
+                  _R_: restart      _e_: export       _<esc>_/_q_: exit
                 '';
 
-                heads = [
+                heads =
+                  let
+                    # __raw: a plain string would be fed to Neovim as keystrokes.
+                    cells = action: [
+                      { __raw = ''function() require("kit.cells").${action} end''; }
+                      { desc = action; }
+                    ];
+                  in
                   [
-                    "j"
-                    ''
-                      function()
-                        require("quarto.runner").run_cell()
-                      end
-                    ''
-                    {
-                      expr = false;
-                    }
-                  ]
-                  [
-                    "l"
-                    ''
-                      function()
-                        require("quarto.runner").run_line()
-                      end
-                    ''
-                    {
-                      expr = false;
-                    }
-                  ]
-                  [
-                    "a"
-                    ''
-                      function()
-                        require("quarto.runner").run_above()
-                      end
-                    ''
-                    {
-                      expr = false;
-                    }
-                  ]
-                  [
-                    "A"
-                    ''
-                      function()
-                        require("quarto.runner").run_all()
-                      end
-                    ''
-                    {
-                      expr = false;
-                    }
-                  ]
-                  [
-                    "r"
-                    "<cmd>MoltenReevaluateCell<cr>"
-                  ]
-                  [
-                    "o"
-                    "<cmd>noautocmd MoltenEnterOutput<cr>"
-                  ]
-                  [
-                    "h"
-                    "<cmd>MoltenHideOutput<cr>"
-                  ]
-                  [
-                    "x"
-                    "<cmd>MoltenOpenInBrowser<cr>"
-                  ]
-                  [
-                    "i"
-                    "<cmd>NotebookKernel<cr>"
-                  ]
-                  [
-                    "R"
-                    "<cmd>MoltenRestart!<cr>"
-                  ]
+                    ([ "j" ] ++ cells "run_cell(0, true)")
+                    ([ "c" ] ++ cells "run_cell(0, false)")
+                    ([ "l" ] ++ cells "run_line(0)")
+                    ([ "a" ] ++ cells "run_above(0)")
+                    ([ "A" ] ++ cells "run_all(0)")
+                    ([ "n" ] ++ cells "jump(0, 1)")
+                    ([ "p" ] ++ cells "jump(0, -1)")
+                    [
+                      "r"
+                      "<cmd>MoltenReevaluateCell<cr>"
+                    ]
+                    [
+                      "o"
+                      "<cmd>noautocmd MoltenEnterOutput<cr>"
+                    ]
+                    [
+                      "h"
+                      "<cmd>MoltenHideOutput<cr>"
+                    ]
+                    [
+                      "d"
+                      "<cmd>MoltenDelete<cr>"
+                    ]
+                    [
+                      "x"
+                      "<cmd>MoltenOpenInBrowser<cr>"
+                    ]
+                    [
+                      "i"
+                      "<cmd>NotebookKernel<cr>"
+                    ]
+                    [
+                      "k"
+                      "<cmd>NotebookKernelSelect<cr>"
+                    ]
+                    [
+                      "I"
+                      "<cmd>MoltenInterrupt<cr>"
+                    ]
+                    [
+                      "R"
+                      "<cmd>MoltenRestart!<cr>"
+                    ]
+                    [
+                      "e"
+                      { __raw = ''function() require("kit.kernel").export(0) end''; }
+                      { desc = "export outputs"; }
+                    ]
                   [
                     "<esc>"
                     null
@@ -225,10 +216,6 @@ _: {
               group = "Molten";
             }
             {
-              __unkeyed-1 = "<localleader>q";
-              group = "Quarto";
-            }
-            {
               __unkeyed-1 = "<localleader>r";
               group = "Run";
             }
@@ -247,6 +234,7 @@ _: {
 
         extraConfigLua = ''
           require("kit.kernel").commands()
+          require("kit.render").commands()
 
           vim.api.nvim_create_user_command("NewNotebook", function(opts)
             require("kit.notebook").create(opts.args)
@@ -255,72 +243,39 @@ _: {
             complete = "file",
           })
 
+          -- Everything else lives in the notebook Hydra (<localleader>j); only the
+          -- hot paths get direct keys.
+          local function notebook_keys(buf)
+            local map = function(mode, lhs, rhs, desc)
+              vim.keymap.set(mode, lhs, rhs, { buffer = buf, silent = true, desc = desc })
+            end
+            map("n", "<localleader>rc", function() require("kit.cells").run_cell(0, false) end, "Run cell")
+            map("n", "<localleader>mI", "<cmd>MoltenInterrupt<cr>", "Interrupt kernel")
+            map("v", "<localleader>r", function()
+              local first, last = vim.fn.line("v"), vim.fn.line(".")
+              if first > last then first, last = last, first end
+              vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<esc>", true, false, true), "n", false)
+              require("kit.cells").run_range(0, first, last)
+            end, "Run selection")
+          end
+
           vim.api.nvim_create_autocmd("FileType", {
             pattern = { "quarto", "markdown" },
             callback = function(args)
               local buf = args.buf
-              local ft = vim.bo[buf].filetype
-
               ${lib.optionalString (config.sharedEditor.quartoSyncPackage != null) ''
                 require("kit.quarto_sync").setup_buffer(buf)
               ''}
-
-              if ft == "markdown" then
-                pcall(function()
-                  require("quarto").activate()
-                end)
+              if vim.bo[buf].filetype == "markdown" then
+                pcall(function() require("quarto").activate() end)
               end
-
-              local map = function(mode, lhs, rhs, desc)
-                vim.keymap.set(mode, lhs, rhs, {
-                  buffer = buf,
-                  silent = true,
-                  desc = desc,
-                })
-              end
-
-              vim.opt_local.wrap = true
-              vim.opt_local.spell = true
-              vim.opt_local.conceallevel = 2
-
-              -- Molten kernel management
-              map("n", "<localleader>mi", "<cmd>NotebookKernel<cr>", "Start project kernel")
-              map("n", "<localleader>mk", "<cmd>NotebookKernelSelect<cr>", "Choose kernel environment")
-              map("n", "<localleader>mr", "<cmd>MoltenRestart!<cr>", "Molten restart kernel")
-              map("n", "<localleader>mI", "<cmd>MoltenInterrupt<cr>", "Molten interrupt kernel")
-
-              -- Quarto runner / notebook execution
-              map("n", "<localleader>rc", function()
-                require("quarto.runner").run_cell()
-              end, "Run cell")
-
-              map("n", "<localleader>ra", function()
-                require("quarto.runner").run_above()
-              end, "Run cell and above")
-
-              map("n", "<localleader>rA", function()
-                require("quarto.runner").run_all()
-              end, "Run all cells")
-
-              map("n", "<localleader>rl", function()
-                require("quarto.runner").run_line()
-              end, "Run line")
-
-              map("v", "<localleader>r", function()
-                require("quarto.runner").run_range()
-              end, "Run visual range")
-
-              -- Molten output controls
-              map("n", "<localleader>me", "<cmd>noautocmd MoltenExportOutput<cr>", "Molten export output")
-              map("n", "<localleader>mo", "<cmd>noautocmd MoltenEnterOutput<cr>", "Molten open output")
-              map("n", "<localleader>mh", "<cmd>MoltenHideOutput<cr>", "Molten hide output")
-              map("n", "<localleader>md", "<cmd>MoltenDelete<cr>", "Molten delete cell")
-              map("n", "<localleader>mx", "<cmd>MoltenOpenInBrowser<cr>", "Molten open output in browser")
-
-              -- Quarto document commands
-              map("n", "<localleader>qp", "<cmd>QuartoPreview<cr>", "Quarto preview")
-              map("n", "<localleader>qr", "<cmd>QuartoRender<cr>", "Quarto render")
+              notebook_keys(buf)
             end,
+          })
+
+          vim.api.nvim_create_autocmd("FileType", {
+            pattern = "python",
+            callback = function(args) notebook_keys(args.buf) end,
           })
         '';
 
@@ -340,8 +295,8 @@ _: {
           {
             mode = "n";
             key = "<leader>qr";
-            action = "<cmd>QuartoRender<cr>";
-            options.desc = "Render Quarto";
+            action = "<cmd>NotebookRender<cr>";
+            options.desc = "Render to a temporary page and open it";
           }
           {
             mode = "n";
@@ -355,9 +310,10 @@ _: {
           {
             event = "BufWritePost";
             pattern = [ "*.ipynb" ];
+            # Jupytext fires this after writing the cells; add the outputs.
             callback.__raw = ''
-              function()
-                pcall(vim.cmd, "MoltenExportOutput")
+              function(args)
+                require("kit.kernel").export(args.buf, vim.fn.fnamemodify(args.file, ":p"))
               end
             '';
           }

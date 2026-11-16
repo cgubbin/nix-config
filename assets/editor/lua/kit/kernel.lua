@@ -160,8 +160,43 @@ function M.start(buf, callback)
     end
     vim.b[buf].kit_kernel = info
     vim.notify("Notebook kernel " .. info.name .. ": " .. info.python)
+    M.import(buf, info.name)
     callback(info)
   end)
+end
+
+local function notebook_path(buf)
+  local path = vim.api.nvim_buf_get_name(buf)
+  return path:match("%.ipynb$") and path or nil
+end
+
+-- Shows outputs stored in an .ipynb once a kernel is attached (Molten keeps
+-- outputs per kernel, so there is nothing to show before one starts).
+function M.import(buf, name)
+  local path = notebook_path(buf)
+  if not path or vim.fn.filereadable(path) ~= 1 then return end
+  local ok, err = pcall(vim.api.nvim_buf_call, buf, function()
+    vim.cmd("MoltenImportOutput " .. vim.fn.fnameescape(path) .. " " .. name)
+  end)
+  if not ok then vim.notify("Could not load stored outputs: " .. tostring(err), vim.log.levels.WARN) end
+end
+
+-- Writes the kernel's outputs into the saved .ipynb (after Jupytext has
+-- written the cells). Without "!" Molten writes a sibling copy-of-*.ipynb
+-- instead, so always overwrite the file being saved. Buffers without a kernel
+-- have no outputs to write.
+function M.export(buf, path)
+  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
+  path = path or notebook_path(buf)
+  if not path then return end
+  local kernels = attached(buf)
+  if #kernels == 0 then return end
+  local name = (vim.b[buf].kit_kernel or {}).name
+  if not contains(kernels, name) then name = kernels[1] end
+  local ok, err = pcall(vim.api.nvim_buf_call, buf, function()
+    vim.cmd("noautocmd MoltenExportOutput! " .. vim.fn.fnameescape(path) .. " " .. name)
+  end)
+  if not ok then vim.notify("Notebook outputs were not saved: " .. tostring(err), vim.log.levels.ERROR) end
 end
 
 -- Runs fn once buf has a kernel, starting the project kernel if needed.

@@ -23,18 +23,24 @@
 
 ## 4. Percent-format notebooks
 
-- [ ] 4.1 Add `# %%` cell detection for `python` buffers and wire run cell, run-and-advance, run above and run all to Molten. Verify cell boundaries with a headless fixture (first cell, last cell, markdown cells, no cells).
-- [ ] 4.2 Document opening `.ipynb` through Jupytext as import/export and explicit pairing commands; confirm no `.ipynb` is written implicitly when saving a `.py` notebook.
+- [x] 4.1 Add `# %%` cell detection for `python` buffers and wire run cell, run-and-advance, run above and run all to Molten. Verify cell boundaries with a headless fixture (first cell, last cell, markdown cells, no cells).
+  - `kit.cells`: percent cells in Python buffers, quarto-nvim's runner elsewhere, every action calling `kit.kernel.ensure()` first. `tests/nixvim-cells.lua` covers no markers, header before the first marker, `[markdown]` cells, `#%%` without a space, trailing blanks, an empty last cell, run/advance/above/all ranges and jumping.
+- [x] 4.2 Document opening `.ipynb` through Jupytext as import/export and explicit pairing commands; confirm no `.ipynb` is written implicitly when saving a `.py` notebook.
+  - `docs/nixvim-notebooks.md`; `tests/nixvim-cells.lua` saves a percent notebook and checks it is the only file written.
 
 ## 5. Output and persistence
 
-- [ ] 5.1 Set Molten `image_provider = "image.nvim"`; document `sharedEditor.imageBackend` values (`sixel` for Windows Terminal 1.22+ with Zellij, `kitty` for Kitty-protocol terminals) and the floating-pane limitation.
-- [ ] 5.2 Determine export ordering against Jupytext's write; replace the `pcall` export with a path that reports errors and import stored outputs on open where supported. Verify a disposable `.ipynb` with text, image and error outputs through save and reopen, preserving unknown metadata.
+- [x] 5.1 Set Molten `image_provider = "image.nvim"`; document `sharedEditor.imageBackend` values (`sixel` for Windows Terminal 1.22+ with Zellij, `kitty` for Kitty-protocol terminals) and the floating-pane limitation.
+  - Also `image_location = "both"`, so plots sit under their cell with the existing virtual-text output. Documented in the option description and `docs/nixvim-notebooks.md`.
+- [x] 5.2 Determine export ordering against Jupytext's write; replace the `pcall` export with a path that reports errors and import stored outputs on open where supported. Verify a disposable `.ipynb` with text, image and error outputs through save and reopen, preserving unknown metadata.
+  - Ordering was already right (Jupytext writes cells with `--update`, then fires `BufWritePost`). The real bug: without `!`, `MoltenExportOutput` writes a sibling `copy-of-<name>.ipynb` instead of the notebook, which is where stray `copy-of-*` files and their Quarto renders in work repositories came from. `kit.kernel.export` now writes into the saved file with the buffer's kernel and reports failures; buffers without a kernel are skipped. Molten can only import into a running kernel, so stored outputs load when the kernel starts. `tests/nixvim-ipynb-outputs.lua` runs real cells and checks text, image (`image/png`) and error outputs, notebook metadata, the markdown cell, no `copy-of-*` file, and a warning-free reopen; it fails if the `!` is removed.
 
 ## 6. Controls and rendering
 
-- [ ] 6.1 Rebuild the notebook Hydra (`j` run-and-advance, `I` interrupt, and the existing actions), keep direct run-cell and interrupt keys, and remove duplicate global and buffer maps; check for collisions and document the menu.
-- [ ] 6.2 Add a no-argument command that renders the current document with Quarto into a temporary directory outside the project and opens it in the browser; verify nothing is created inside the repository.
+- [x] 6.1 Rebuild the notebook Hydra (`j` run-and-advance, `I` interrupt, and the existing actions), keep direct run-cell and interrupt keys, and remove duplicate global and buffer maps; check for collisions and document the menu.
+  - The old heads were emitted as strings, which Hydra feeds as keystrokes, so `j`/`l`/`a`/`A` typed `function()…` into the buffer instead of running cells. Heads are now Lua functions (`__raw`), with `c`, `n`/`p`, `d`, `k`, `I` and `e` added. Direct keys: `,rc`, `,mI`, visual `,r`; buffer `,q*`, `,r[aAl]` and `,m*` duplicates removed. No collisions with other `<localleader>` maps (only quarto-sync's `,rp`). `tests/nixvim-cells.lua` drives the Hydra with keys and fails if heads become strings again.
+- [x] 6.2 Add a no-argument command that renders the current document with Quarto into a temporary directory outside the project and opens it in the browser; verify nothing is created inside the repository.
+  - `:NotebookRender` (`<leader>qr`, replacing in-place `QuartoRender`): `.py` via Jupytext plus the running kernel's outputs and `.ipynb` with stored outputs, both `--no-execute`; `.qmd`/`.md` execute with the project's Python in their own directory. Quarto comes from the project environment (it is not on the default PATH). On WSL the page opens through `wslpath -w`. `tests/nixvim-render.lua` covers all three types, the run-directory location, an unchanged project and a missing Quarto. 2026-11-16 on the work laptop: real Quarto 1.9.37 rendered a percent notebook in 17.5 s with the project unchanged (browser stubbed; opening Windows Firefox is still to check by hand).
 
 ## 7. Validation and adoption
 

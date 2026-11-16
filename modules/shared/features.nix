@@ -72,7 +72,11 @@ in
         "sixel"
       ];
       default = "kitty";
-      description = "Terminal image protocol used by image.nvim.";
+      description = ''
+        Terminal image protocol used by image.nvim, including Molten notebook plots.
+        Use "sixel" for Windows Terminal 1.22+ (also inside Zellij, but not in Zellij
+        floating panes) and "kitty" for terminals that speak the Kitty graphics protocol.
+      '';
     };
     config.programs.nixvim.globals.shared_editor_config_directory = lib.mkIf (
       config.sharedEditor.configDirectory != null
