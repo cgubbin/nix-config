@@ -9,7 +9,7 @@ _: {
     let
       inherit (lib) mkIf;
       cfg = config.home-config.desktop;
-      enabled = pkgs.stdenv.isLinux && cfg.wayland.enable;
+      enabled = pkgs.stdenv.hostPlatform.isLinux && cfg.wayland.enable;
     in
     {
 

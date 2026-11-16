@@ -23,7 +23,7 @@ _: {
       };
     in
     {
-      wayland.windowManager.hyprland.settings = mkIf (cfg.hyprland.enable && pkgs.stdenv.isLinux) {
+      wayland.windowManager.hyprland.settings = mkIf (cfg.hyprland.enable && pkgs.stdenv.hostPlatform.isLinux) {
         bindm = [
           "SUPER,mouse:272,movewindow"
           "SUPER,mouse:273,resizewindow"

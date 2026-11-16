@@ -21,7 +21,7 @@ in
         top.flake.modules.homeManager."home-kit-features-desktop-hyprland-window-bind"
       ];
 
-      wayland.windowManager.hyprland = mkIf (cfg.hyprland.enable && pkgs.stdenv.isLinux) {
+      wayland.windowManager.hyprland = mkIf (cfg.hyprland.enable && pkgs.stdenv.hostPlatform.isLinux) {
         # TODO: Switch to a lua config
         configType = "hyprlang";
 

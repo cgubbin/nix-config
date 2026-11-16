@@ -11,7 +11,7 @@ _: {
       cfg = config.home-config.dev;
     in
     {
-      services.ollama = mkIf (cfg.devTools.enable && pkgs.stdenv.isLinux) {
+      services.ollama = mkIf (cfg.devTools.enable && pkgs.stdenv.hostPlatform.isLinux) {
         enable = true;
         # acceleration = "cuda";
         package = pkgs.ollama-cpu;

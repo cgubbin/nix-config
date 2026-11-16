@@ -13,7 +13,7 @@ in
     let
       inherit (lib) mkIf;
       cfg = config.home-config.desktop;
-      enabled = cfg.wayland.enable && pkgs.stdenv.isLinux;
+      enabled = cfg.wayland.enable && pkgs.stdenv.hostPlatform.isLinux;
     in
     {
       imports = [

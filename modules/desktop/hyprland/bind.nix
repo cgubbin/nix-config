@@ -11,7 +11,7 @@ _: {
       cfg = config.home-config.desktop.wayland;
     in
     {
-      wayland.windowManager.hyprland.settings = mkIf (cfg.hyprland.enable && pkgs.stdenv.isLinux) {
+      wayland.windowManager.hyprland.settings = mkIf (cfg.hyprland.enable && pkgs.stdenv.hostPlatform.isLinux) {
         bindl =
           let
             playerctl = "${pkgs.playerctl}/bin/playerctl";
