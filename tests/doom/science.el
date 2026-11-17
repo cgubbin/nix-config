@@ -177,7 +177,11 @@
           (goto-char (point-min))
           (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
             (org-babel-execute-src-block))
-          (cl-assert (string-match-p "environment-ok" (buffer-string))))))
+          ;; Match the result, not the source line, which also contains the marker.
+          (cl-assert (string-match-p "^#\\+RESULTS:\n: environment-ok$" (buffer-string)) nil
+                     "Block did not run with %s: %s\nBabel errors: %s" command (buffer-string)
+                     (when-let ((errors (get-buffer "*Org-Babel Error Output*")))
+                       (with-current-buffer errors (buffer-string)))))))
 
 
   ;; Real TeX + SVG conversion, including regeneration after an edit.
@@ -268,7 +272,8 @@
             (error "PDF export did not embed the generated figure")))))))))
 
 ;; Exercise every template using the standard Org-roam capture lifecycle.
-(dolist (key '("p" "m" "a" "r" "x"))
+;; Concepts, algorithms and papers moved to the learning templates (tests/doom/learning.el).
+(dolist (key '("m" "x"))
   (let ((title (concat "Scientific template " key)))
     (org-roam-capture- :keys key :node (org-roam-node-create :title title))
     (let ((buffer (seq-find (lambda (b) (buffer-local-value 'org-capture-mode b)) (buffer-list))))
@@ -276,13 +281,11 @@
       (with-current-buffer buffer (insert "Test content") (org-capture-finalize)))
     (org-roam-db-sync)
     (let ((node (org-roam-node-from-title-or-alias title)))
-      (cl-assert (and node (org-roam-node-id node)))
-      (when (equal key "r")
-        (let ((paper-note (kit/test-file-text (org-roam-node-file node))))
-          (dolist (expected '(":CITEKEY:" ":DOI:" ":PDF:" "* Claims and evidence"
-                              "* Method and assumptions" "* Limitations"
-                              "zathura:relative/path/to/paper.pdf::page=1"))
-            (cl-assert (string-match-p (regexp-quote expected) paper-note))))))))
-(dolist (key '("d" "c" "e"))
+      (cl-assert (and node (org-roam-node-id node))))))
+(dolist (key '("d" "e"))
   (cl-assert (assoc key org-roam-capture-templates)))
+(dolist (key '("c" "p" "a" "r"))
+  (cl-assert (not (seq-some (lambda (entry) (and (equal (car entry) key)
+                                                 (string-match-p "concept\\|Algorithm\\|Paper" (cadr entry))))
+                            org-roam-capture-templates))))
 t

@@ -182,9 +182,6 @@ Linked worktrees share the common Git directory and therefore one task file."
           ("t" "TODO task" entry
            (file+headline ,(expand-file-name "agenda/tasks.org" org-directory) "Tasks")
            "* TODO %?\n%U\n%i\n")
-          ("c" "Scientific concept" plain (file kit/org-new-node-file)
-           ":PROPERTIES:\n:ID: %(org-id-new)\n:END:\n#+title: %?\n#+filetags: :concept:\n\n* Idea\n\n* References\n"
-           :unnarrowed t)
           ("e" "Engineering investigation" plain (file kit/org-new-node-file)
            ":PROPERTIES:\n:ID: %(org-id-new)\n:END:\n#+title: %?\n#+filetags: :investigation:\n\n* Question\n\n* Evidence\n\n* Next steps\n"
            :unnarrowed t)
@@ -226,10 +223,7 @@ Linked worktrees share the common Git directory and therefore one task file."
            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                               "#+title: ${title}\n")
            :unnarrowed t)
-          ("c" "Scientific concept" plain "* Idea\n%?\n\n* References\n"
-           :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                              "#+title: ${title}\n#+filetags: :concept:\n")
-           :unnarrowed t)
+          ;; Concept notes come from the learning templates ("lc", learning.el).
           ("e" "Engineering investigation" plain "* Question\n%?\n\n* Evidence\n\n* Next steps\n"
            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                               "#+title: ${title}\n#+filetags: :investigation:\n")
@@ -253,6 +247,17 @@ Linked worktrees share the common Git directory and therefore one task file."
            "* Status\nProposed\n\n* Context\n%?\n\n* Decision\n\n* Alternatives\n\n* Consequences\n\n* References\n"
            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                               "#+title: ${title}\n#+filetags: :adr:\n")
+           :unnarrowed t)
+          ;; Process notes. The bodies live in the notes repository so they can change without a
+          ;; rebuild. "f": one review per stored process (our data against the fab's manual).
+          ("f" "Fab process review" plain (file "~/notes/work/templates/process.org")
+           :target (file+head "%<%Y%m%d%H%M%S>-process-${slug}.org"
+                              "#+title: Process: ${title}\n#+filetags: :process:\n")
+           :unnarrowed t)
+          ;; "F": one note per fab process manual (the platform itself).
+          ("F" "Fab platform" plain (file "~/notes/work/templates/platform.org")
+           :target (file+head "%<%Y%m%d%H%M%S>-platform-${slug}.org"
+                              "#+title: Platform: ${title}\n#+filetags: :process:platform:\n")
            :unnarrowed t))
         ;; Dailies are transient activity notes, separate from durable nodes.
         org-roam-dailies-directory "../journal/"

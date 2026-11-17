@@ -49,6 +49,7 @@
     (set-frame-parameter frame 'kit-org-project-context old)))
 (load (expand-file-name "projects.el" (file-name-directory (or load-file-name buffer-file-name))) nil nil t)
 (load (expand-file-name "science.el" (file-name-directory (or load-file-name buffer-file-name))) nil nil t)
+(load (expand-file-name "learning.el" (file-name-directory (or load-file-name buffer-file-name))) nil nil t)
 (dolist (feature '(org-download org-noter pdf-tools forge))
   (unless (require feature nil t)
     (error "Nix-built Emacs package is unavailable: %s" feature)))

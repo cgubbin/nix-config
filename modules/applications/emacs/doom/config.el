@@ -26,3 +26,4 @@
   (setq org-confirm-babel-evaluate t))
 (load! "knowledge")
 (load! "science")
+(load! "learning")

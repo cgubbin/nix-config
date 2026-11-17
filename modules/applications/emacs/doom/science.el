@@ -82,16 +82,12 @@
   (require 'citar)
   (require 'citar-org))
 
+;; Concepts, algorithms and papers are captured with the learning templates (learning.el), so each
+;; of those tags has one layout.
 (after! org-roam
   (dolist (entry
-           '(("p" "Physics concept" plain "* Assumptions\n%?\n\n* Derivation\n\n* Validation\n\n* References\n\n* Related concepts\n"
-              :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: :physics:\n") :unnarrowed t)
-             ("m" "Mathematical derivation" plain "* Assumptions\n%?\n\n* Derivation\n\n* Validation\n\n* References\n\n* Related concepts\n"
+           '(("m" "Mathematical derivation" plain "* Assumptions\n%?\n\n* Derivation\n\n* Validation\n\n* References\n\n* Related concepts\n"
               :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: :mathematics:\n") :unnarrowed t)
-             ("a" "Algorithm" plain "* Problem and assumptions\n%?\n\n* Method\n\n* Validation\n\n* References\n\n* Related concepts\n"
-              :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: :algorithm:\n") :unnarrowed t)
-             ("r" "Paper" plain "* Reading question\n%?\n\n* Claims and evidence\n\n* Method and assumptions\n\n* Limitations\n\n* Page notes\nUse [[zathura:relative/path/to/paper.pdf::page=1]] to open at a page.\n\n* Validation\n\n* References\n\n* Related concepts\n"
-              :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n:PROPERTIES:\n:CITEKEY:\n:DOI:\n:PDF:\n:END:\n#+filetags: :paper:\n") :unnarrowed t)
              ("x" "Numerical experiment" plain "* Question and assumptions\n%?\n\n* Method\n\n* Validation\n\n* References\n\n* Related concepts\n"
               :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: :experiment:\n") :unnarrowed t)))
     (add-to-list 'org-roam-capture-templates entry t)))

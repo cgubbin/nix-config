@@ -146,7 +146,6 @@ under XDG directories; these are distinct from the repository and note contents.
 | --- | --- | --- |
 | i | inbox.org | Quick thoughts to process later |
 | t | agenda/tasks.org | TODO commitments, visible in the agenda |
-| c | roam/ | Scientific concept with stable ID and references section |
 | e | roam/ | Engineering investigation: question, evidence, next steps |
 | m | journal/meetings.org | Dated meeting entry and actions |
 | p | private projects/<git-common-dir-hash>/tasks.org | Project-local TODO entry, included in the global agenda |
@@ -163,8 +162,54 @@ Doom uses Evil movement and a space leader. **SPC n c** captures,
 the local leader is **SPC m**; its **m** submenu contains Org-roam insert, search,
 backlinks and daily navigation commands. Use `M-x org-roam-node-insert` to link a
 concept and `M-x org-roam-buffer-toggle` for backlinks. Org-roam's own capture
-menu also offers physics, derivation, algorithm, paper and experiment templates.
-The file IDs make links independent of titles and filenames.
+menu also offers derivation (`m`) and numerical experiment (`x`) templates, the
+fab process review (`f`) and platform (`F`) templates, and the learning notes
+under `l` (below). The file IDs make links independent of titles and filenames.
+
+### Learning notes
+
+Subject notes for learning a field, written by you and reviewed against a
+mastery gate, are captured from the `l` group of Org-roam's capture menu:
+
+| Key | Type and tag | File |
+| --- | --- | --- |
+| lc | concept | `roam/<timestamp>-concept-<slug>.org` |
+| lp | paper | `roam/<timestamp>-paper-<slug>.org` |
+| lg | algorithm | `roam/<timestamp>-algorithm-<slug>.org` |
+| lm | moc (map of content) | `roam/<timestamp>-moc-<slug>.org` |
+| la | arch (architecture) | `roam/<timestamp>-arch-<slug>.org` |
+
+Emacs sets each note's key, filename, title and filetag. The body is read at
+capture time from `templates/<type>.org` under the Org root, so a layout changes
+by editing that file in the notes repository, with no rebuild. If the file is
+missing, the capture stops with an error naming it and no note is created. If the
+file starts with a `:PROPERTIES:` drawer (for example `:STATUS: stub` or
+`:ROAM_REFS:`), those properties go into the note's top drawer beside `:ID:`,
+where Org-roam reads them; the rest of the file becomes the body. The
+layouts themselves (stub questions, gate, review log) are documented in the
+notes repository.
+
+These replace the earlier overlapping templates, so each of the `concept`,
+`paper` and `algorithm` tags has a single layout:
+
+| Old key | Old template | Now |
+| --- | --- | --- |
+| c (both capture menus) | Scientific concept | lc |
+| p (Org-roam, science) | Physics concept; was hidden by project overview `p` | lc |
+| a (Org-roam, science) | Algorithm; was hidden by the ADR `a` | lg |
+| r | Paper | lp |
+
+`p` (project overview) and `a` (ADR) are unchanged. A test fails if two Org-roam
+capture templates share a key, or if a key selects a different template than
+the one documented.
+
+A note's Python blocks can run in a Pixi workspace, such as a notes repository's
+`lab/`, by setting the header once per file:
+
+    #+property: header-args:python :python "pixi run --as-is python" :dir ../lab
+
+Run `pixi install` in the workspace first: `--as-is` neither installs nor
+updates, so blocks in an uninstalled workspace fail with Pixi's error.
 
 Org-roam's node capture menu also provides project overview (`p`), investigation
 (`i`), benchmark (`b`), and architecture decision record (`a`) templates. Use
@@ -245,8 +290,11 @@ interpreter is not changed. For an already prepared uv project, a block can use
 project, use `:python "pixi run --as-is python"` and set the block's `:dir` to
 the project directory. These examples use existing environments and do not
 install dependencies. Set paths and flags to match the project's own tooling;
-only non-session blocks have been checked here. If uv or Pixi are not installed
-by your environment, add them through your normal Nix/project setup.
+only non-session blocks have been checked here. The profile provides `pixi`,
+wrapped in an FHS environment so that conda-forge binaries and Pixi's activation
+script (which runs `/usr/bin/env`) work on NixOS; it is on Emacs's own path as
+well as the shell's. If uv is not installed by your environment, add it through
+your normal Nix/project setup.
 
 The synthetic example in `docs/examples/scientific/` illustrates a derivation,
 rendered equations, a citation, a linked node, a Python-generated SVG and its
