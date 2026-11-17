@@ -1,6 +1,10 @@
 -- Saving an .ipynb writes the kernel's outputs into that file (never a sibling
 -- copy-of-*.ipynb) and keeps notebook metadata; reopening loads stored outputs.
 local kernel = require("kit.kernel")
+-- Headless runs have no terminal size, so Molten's image placement fails on
+-- every tick and keeps its host busy. Image outputs are still recorded and
+-- saved as data; they are just not drawn.
+vim.fn.MoltenUpdateOption("image_provider", "none")
 local project = require("kit.project")
 local python_env = require("kit.python_env")
 
@@ -88,8 +92,30 @@ for _, name in ipairs(vim.fn.readdir(root)) do
   assert(not name:match("^copy%-of%-"), "export wrote a sibling file: " .. name)
 end
 
--- Reopen: stored outputs load once a kernel attaches, without errors.
+-- `v`: the plot of the cell under the cursor opens in the system viewer.
+local ui_open, opened = vim.ui.open, nil
+vim.ui.open = function(target) opened = target; return {}, nil end
+vim.api.nvim_win_set_cursor(0, { find(cells_code[2][3]), 0 })
+local plot = kernel.view_plot(buf)
+vim.ui.open = ui_open
+assert(plot and opened, "view_plot did not open anything")
+local bytes = assert(io.open(plot, "rb")):read(8)
+assert(bytes == "\137PNG\r\n\26\n", "view_plot did not write a PNG: " .. vim.inspect(bytes))
+assert(plot:find(kernel.dir, 1, true) == 1, "plot written outside the run directory: " .. plot)
+-- A cell without a plot says so instead of opening something else.
+vim.api.nvim_win_set_cursor(0, { find(cells_code[1][1]), 0 })
+opened = nil
+vim.ui.open = function(target) opened = target; return {}, nil end
+kernel.view_plot(buf)
+vim.ui.open = ui_open
+assert(opened == nil, "a cell without a plot opened " .. tostring(opened))
+
+-- Reopen: saved outputs load on request (:NotebookLoadOutputs), without errors.
 pcall(vim.cmd, "MoltenDeinit")
+-- Molten finishes tearing down asynchronously; starting the next kernel while
+-- it is still deleting the old buffer's marks intermittently failed init.
+vim.wait(2000, function() return #vim.fn.MoltenRunningKernels(false) == 0 end, 100)
+vim.wait(500)
 vim.cmd("bwipeout!")
 local warnings = {}
 local notify = vim.notify
@@ -102,10 +128,14 @@ vim.notify = function(msg, level, ...)
   return notify(msg, level, ...)
 end
 vim.cmd("edit " .. vim.fn.fnameescape(path))
-start(vim.api.nvim_get_current_buf())
+local reopened = vim.api.nvim_get_current_buf()
+start(reopened)
+vim.cmd("NotebookLoadOutputs")
 -- The import is deferred (and retried while Molten's host is busy); give it
 -- the full retry window before checking for warnings.
 vim.wait(kernel.import_retries * kernel.import_delay + 1000)
+local loaded = #vim.api.nvim_buf_get_extmarks(reopened, -1, 0, -1, {})
+assert(loaded > 0, "no saved outputs were shown after :NotebookLoadOutputs")
 vim.notify = notify
 assert(#warnings == 0, "reopening raised: " .. table.concat(warnings, "\n"))
 

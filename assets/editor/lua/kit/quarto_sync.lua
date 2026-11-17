@@ -10,11 +10,10 @@ function M.setup_buffer(buf)
     end
     initialized = true
   end
+  -- Preview the notebook itself: outputs are now saved into it, not into a
+  -- sibling copy-of-<name>.ipynb.
   vim.keymap.set("n", "<localleader>rp", function()
-    local name = vim.api.nvim_buf_get_name(buf)
-    local dir = vim.fn.fnamemodify(name, ":h")
-    local file = vim.fn.fnamemodify(name, ":t")
-    vim.cmd("QuartoSyncPreview " .. vim.fn.fnameescape(dir .. "/copy-of-" .. file))
+    vim.cmd("QuartoSyncPreview " .. vim.fn.fnameescape(vim.api.nvim_buf_get_name(buf)))
   end, { buffer = buf, desc = "Preview with cell sync" })
 end
 

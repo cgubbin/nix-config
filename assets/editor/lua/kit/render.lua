@@ -72,6 +72,7 @@ function M.render(buf, callback)
 
   local project = require("kit.project")
   local root = project.root(path)
+  vim.notify("Rendering " .. vim.fn.fnamemodify(path, ":~:.") .. " (this takes a while) …")
   project.load_env(root, function(env, env_err)
     if not env then return callback(nil, fail("project environment unavailable: " .. tostring(env_err))) end
     local quarto = find_executable("quarto", env)
@@ -81,7 +82,6 @@ function M.render(buf, callback)
     local python = require("kit.python").resolve(root, env)
     if python then env.QUARTO_PYTHON = python end
     local args = vim.list_extend({ quarto, "render", target, "--to", "html" }, extra)
-    vim.notify("Rendering " .. vim.fn.fnamemodify(path, ":~:.") .. " …")
     local ok, err = pcall(vim.system, args, { cwd = out, env = env, clear_env = true, text = true }, function(result)
       vim.schedule(function()
         if result.code ~= 0 then
@@ -90,7 +90,9 @@ function M.render(buf, callback)
         end
         local html = out .. "/" .. stem .. ".html"
         if vim.fn.filereadable(html) ~= 1 then return callback(nil, fail("no HTML produced in " .. out)) end
-        callback({ html = html, opened = M.open(html) })
+        local opened = M.open(html)
+        vim.notify("Rendered; opening " .. opened)
+        callback({ html = html, opened = opened })
       end)
     end)
     if not ok then callback(nil, fail("could not start quarto: " .. tostring(err))) end

@@ -26,6 +26,16 @@ _: {
               +UpdateRemotePlugins +qa
             grep -q "MoltenInit" "$out"
           '';
+      # Opens a file with the desktop's handler. Windows programs launched from
+      # WSL (the browser behind xdg-open) cannot open Linux paths, so convert
+      # them first. Used for Molten's "open in browser".
+      openFile = pkgs.writeShellScript "kit-open" ''
+        target="$1"
+        if command -v wslpath >/dev/null 2>&1 && [ -e "$target" ]; then
+          target="$(wslpath -w "$target")"
+        fi
+        exec xdg-open "$target"
+      '';
     in
     {
       programs.nixvim = {
@@ -80,11 +90,16 @@ _: {
               wrap_output = true;
               virt_text_output = true;
               virt_lines_off_by_1 = true;
-              output_win_max_height = 12;
-              # Plots render through image.nvim, whose backend is the consumer's
-              # sharedEditor.imageBackend; "both" puts them under the cell too.
+              # Tall enough for a plot in the output window.
+              output_win_max_height = 30;
+              # Plots render through image.nvim with the consumer's
+              # sharedEditor.imageBackend. Sixel images under the cell are
+              # redrawn on every tick and flicker (Windows Terminal + Zellij),
+              # so with Sixel plots live in the output window (`o`), which is
+              # stable; other backends also show them under the cell.
               image_provider = "image.nvim";
-              image_location = "both";
+              image_location = if config.sharedEditor.imageBackend == "sixel" then "float" else "both";
+              open_cmd = "${openFile}";
             };
           };
 
@@ -104,12 +119,18 @@ _: {
               max_width = 100;
               max_height = 24;
               max_width_window_percentage = 100;
-              max_height_window_percentage = 50;
+              # Relative to the window an image is drawn in. 50 halved plots in
+              # Molten's output window (61x24 requested, 38x15 drawn); max_height
+              # still caps every image at 24 rows.
+              max_height_window_percentage = 100;
               window_overlap_clear_enabled = true;
               window_overlap_clear_ft_ignore = [
                 "cmp_menu"
                 "cmp_docs"
                 ""
+                # Molten's output window holds the plot; overlap clearing
+                # would hide the image inside it.
+                "molten_output"
               ];
             };
           };
@@ -135,7 +156,8 @@ _: {
                   _n_: next cell    _p_: prev cell    _o_: open output
                   _h_: hide output  _d_: delete output _x_: browser
                   _i_: kernel       _k_: choose env   _I_: interrupt
-                  _R_: restart      _e_: export       _<esc>_/_q_: exit
+                  _R_: restart      _e_: save outputs _L_: load saved
+                  _v_: view plot    ^^                _<esc>_/_q_: exit
                 '';
 
                 heads =
@@ -194,6 +216,16 @@ _: {
                       "e"
                       { __raw = ''function() require("kit.kernel").export(0) end''; }
                       { desc = "export outputs"; }
+                    ]
+                    [
+                      "L"
+                      { __raw = ''function() require("kit.kernel").load_outputs(0) end''; }
+                      { desc = "load saved outputs"; }
+                    ]
+                    [
+                      "v"
+                      { __raw = ''function() require("kit.kernel").view_plot(0) end''; }
+                      { desc = "view plot"; }
                     ]
                   [
                     "<esc>"

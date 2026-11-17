@@ -140,6 +140,9 @@ function M.start(buf, callback)
   buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
   callback = callback or function() end
   local root = require("kit.project").root(vim.api.nvim_buf_get_name(buf))
+  -- Loading the project environment can take a while (project hooks), so say
+  -- something now rather than after it finishes.
+  vim.notify("Starting notebook kernel for " .. vim.fn.fnamemodify(root, ":~") .. " …")
   M.prepare(root, function(info, err)
     if not info then
       vim.notify("Notebook kernel: " .. err, vim.log.levels.ERROR)
@@ -147,51 +150,86 @@ function M.start(buf, callback)
     end
     if not vim.api.nvim_buf_is_valid(buf) then return callback(nil, "buffer closed") end
     local running = vim.fn.MoltenRunningKernels(false)
+    local shared = contains(running, info.name)
+
+    -- Report the kernel only once Molten has seen it ready. Molten's readiness
+    -- check (jupyter_client's wait_for_ready) flushes the kernel's IOPub
+    -- channel, so the output of a cell sent before then is discarded and the
+    -- cell stays held forever. Callers usually run a cell straight away.
+    local finished = false
+    local function finish(value, err)
+      if finished then return end
+      finished = true
+      if not value then vim.notify("Notebook kernel: " .. err, vim.log.levels.ERROR) end
+      callback(value, err)
+    end
+    local ready
+    if not shared then
+      ready = vim.api.nvim_create_autocmd("User", {
+        pattern = "MoltenKernelReady",
+        callback = function(ev)
+          if ev.data and contains(attached(buf), ev.data.kernel_id) then
+            vim.schedule(function() finish(info) end)
+            return true
+          end
+        end,
+      })
+    end
+
     local ok, init_err = pcall(vim.api.nvim_buf_call, buf, function()
-      vim.cmd("MoltenInit " .. (contains(running, info.name) and "shared " or "") .. info.name)
+      vim.cmd("MoltenInit " .. (shared and "shared " or "") .. info.name)
     end)
     -- Molten reports init failures as notifications, not errors.
     if ok and not contains(attached(buf), info.name) then
       ok, init_err = false, "Molten could not start " .. info.name .. " (" .. info.python .. "); see its notification for the cause"
     end
     if not ok then
-      vim.notify("Notebook kernel: " .. tostring(init_err), vim.log.levels.ERROR)
-      return callback(nil, tostring(init_err))
+      if ready then pcall(vim.api.nvim_del_autocmd, ready) end
+      return finish(nil, tostring(init_err))
     end
     vim.b[buf].kit_kernel = info
     vim.notify("Notebook kernel " .. info.name .. ": " .. info.python)
-    M.import(buf, info.name)
-    callback(info)
+    if shared then return finish(info) end
+    vim.defer_fn(function()
+      if finished then return end
+      pcall(vim.api.nvim_del_autocmd, ready)
+      finish(nil, info.name .. " did not become ready within " .. M.ready_timeout / 1000 .. " s")
+    end, M.ready_timeout)
   end)
 end
+
+M.ready_timeout = 60000
 
 local function notebook_path(buf)
   local path = vim.api.nvim_buf_get_name(buf)
   return path:match("%.ipynb$") and path or nil
 end
 
--- Shows outputs stored in an .ipynb once a kernel is attached (Molten keeps
--- outputs per kernel, so there is nothing to show before one starts).
--- Runs after MoltenInit returns: straight after init Molten's host can still be
--- busy starting the kernel and rejects the request ("Request from non-main
--- thread"), so retry briefly before reporting a failure.
+-- Shows outputs stored in an .ipynb in the attached kernel, then calls done().
+-- Explicit only (:NotebookLoadOutputs): Molten applies the import
+-- asynchronously and it deletes overlapping cells, so importing when a kernel
+-- starts would wipe the output of a cell run straight afterwards. Molten's host
+-- can also be busy just after init and reject the request ("Request from
+-- non-main thread"), so retry briefly before giving up.
 M.import_retries = 10
 M.import_delay = 200
 
-function M.import(buf, name, attempt)
+function M.import(buf, name, done, attempt)
+  done = done or function() end
   attempt = attempt or 1
   local path = notebook_path(buf)
-  if not path or vim.fn.filereadable(path) ~= 1 then return end
+  if not path or vim.fn.filereadable(path) ~= 1 then return done() end
   vim.defer_fn(function()
-    if not vim.api.nvim_buf_is_valid(buf) then return end
+    if not vim.api.nvim_buf_is_valid(buf) then return done() end
     local ok, err = pcall(vim.api.nvim_buf_call, buf, function()
       vim.cmd("MoltenImportOutput " .. vim.fn.fnameescape(path) .. " " .. name)
     end)
-    if ok then return end
+    if ok then return done() end
     if tostring(err):find("non-main thread", 1, true) and attempt < M.import_retries then
-      return M.import(buf, name, attempt + 1)
+      return M.import(buf, name, done, attempt + 1)
     end
     vim.notify("Could not load stored outputs: " .. tostring(err), vim.log.levels.WARN)
+    done()
   end, attempt == 1 and 0 or M.import_delay)
 end
 
@@ -252,6 +290,59 @@ function M.commands()
     { desc = "Choose the project environment and start its kernel" })
   vim.api.nvim_create_user_command("NotebookKernelInfo", function() M.info(0) end,
     { desc = "Show the kernel attached to this buffer" })
+  vim.api.nvim_create_user_command("NotebookLoadOutputs", function() M.load_outputs(0) end,
+    { desc = "Show the outputs saved in this .ipynb (starts the kernel if needed)" })
+end
+
+-- Opens the plot of the cell under the cursor in the system viewer (the
+-- browser, via wslpath on WSL). Molten only draws images in its output window
+-- while that window has focus, so this is the way to keep a plot visible next
+-- to the code. The image comes from Molten's own saved state (:MoltenSave).
+function M.view_plot(buf)
+  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
+  local kernels = attached(buf)
+  if #kernels == 0 then return vim.notify("No notebook kernel attached; run a cell first") end
+  local name = (vim.b[buf].kit_kernel or {}).name
+  if not contains(kernels, name) then name = kernels[1] end
+  local line = vim.api.nvim_win_get_cursor(0)[1] - 1 -- Molten spans are 0-based
+  local dir = M.dir .. "/plots"
+  vim.fn.mkdir(dir, "p")
+  local state = dir .. "/state-" .. buf .. ".json"
+  local ok, err = pcall(vim.api.nvim_buf_call, buf, function()
+    vim.cmd("MoltenSave " .. vim.fn.fnameescape(state) .. " " .. name)
+  end)
+  if not ok or vim.fn.filereadable(state) ~= 1 then
+    return vim.notify("Could not read the kernel's outputs: " .. tostring(err), vim.log.levels.ERROR)
+  end
+  local decoded_ok, saved = pcall(vim.json.decode, table.concat(vim.fn.readfile(state), "\n"))
+  if not decoded_ok or type(saved) ~= "table" then return vim.notify("Could not parse Molten's saved state", vim.log.levels.ERROR) end
+  -- The cell containing the cursor, else the nearest one above it.
+  local chosen
+  for _, cell in ipairs(saved.cells or {}) do
+    local first, last = cell.span.begin.lineno, cell.span["end"].lineno
+    if first <= line and line <= last then chosen = cell; break end
+    if last < line and (not chosen or last > chosen.span["end"].lineno) then chosen = cell end
+  end
+  local png
+  for _, chunk in ipairs((chosen or {}).chunks or {}) do
+    png = png or (type(chunk.data) == "table" and chunk.data["image/png"])
+  end
+  if not png then return vim.notify("No plot in this cell's output") end
+  local path = string.format("%s/plot-%s-%d.png", dir, tostring(chosen.execution_count or "x"), os.time())
+  local f = assert(io.open(path, "wb"))
+  f:write(vim.base64.decode((png:gsub("%s", ""))))
+  f:close()
+  return path, require("kit.render").open(path)
+end
+
+-- Loads the outputs saved in the buffer's .ipynb into its kernel.
+function M.load_outputs(buf)
+  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
+  if not notebook_path(buf) then return vim.notify("Saved outputs are only available for .ipynb files") end
+  M.ensure(buf, function(info)
+    local name = (info and info.name) or attached(buf)[1]
+    if name then M.import(buf, name) end
+  end)
 end
 
 return M

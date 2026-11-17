@@ -109,3 +109,54 @@ vim.cmd("write")
 local files = vim.fn.readdir(dir)
 same(files, { "analysis.py" }, "files after saving a percent notebook")
 vim.cmd("bwipeout!")
+
+-- Fenced chunks (Markdown/Quarto, and .ipynb opened through Jupytext).
+local md = {
+  "# Title",                -- 1
+  "",                       -- 2
+  "```python",              -- 3 Jupytext style
+  "a = 1",                  -- 4
+  "```",                    -- 5
+  "Some prose.",            -- 6
+  "```{python}",            -- 7 Quarto style
+  "#| echo: false",         -- 8
+  "b = 2",                  -- 9
+  "```",                    -- 10
+  "```{r}",                 -- 11 other language: skipped
+  "x <- 1",                 -- 12
+  "```",                    -- 13
+  "```python",              -- 14 unclosed
+  "c = 3",                  -- 15
+}
+same(cells.parse_fenced(md), {
+  { marker = 3, first = 4, last = 4, markdown = false },
+  { marker = 7, first = 8, last = 9, markdown = false },
+  { marker = 11, first = 12, last = 12, markdown = true },
+  { marker = 14, first = 15, last = 15, markdown = false },
+}, "fenced chunks")
+same(cells.parse_fenced({ "just prose", "" }), {}, "prose only")
+
+kernel.ensure = function(_, fn) fn({ name = "fake-kernel" }) end
+vim.fn.MoltenEvaluateRange = function(name, first, last) calls[#calls + 1] = { name, first, last } end
+vim.cmd("enew")
+vim.bo.filetype = "markdown"
+vim.api.nvim_buf_set_lines(0, 0, -1, false, md)
+calls = {}
+vim.api.nvim_win_set_cursor(0, { 4, 0 })
+cells.run_cell(0, true)
+same(calls, { { "fake-kernel", 4, 4 } }, "markdown run cell")
+assert(vim.api.nvim_win_get_cursor(0)[1] == 8, "advance in markdown, got " .. vim.api.nvim_win_get_cursor(0)[1])
+calls = {}
+cells.run_all(0)
+same(calls, { { "fake-kernel", 4, 4 }, { "fake-kernel", 8, 9 }, { "fake-kernel", 15, 15 } }, "markdown run all")
+vim.api.nvim_win_set_cursor(0, { 1, 0 })
+cells.jump(0, 1)
+assert(vim.api.nvim_win_get_cursor(0)[1] == 3, "jump from prose to first chunk, got " .. vim.api.nvim_win_get_cursor(0)[1])
+-- The Hydra works the same way in Markdown buffers.
+calls = {}
+vim.api.nvim_win_set_cursor(0, { 9, 0 })
+vim.api.nvim_feedkeys(vim.g.maplocalleader .. "jcq", "xt", false)
+same(calls, { { "fake-kernel", 8, 9 } }, "Hydra c head in markdown")
+kernel.ensure = ensure
+vim.fn.MoltenEvaluateRange = evaluate
+vim.cmd("bwipeout!")
