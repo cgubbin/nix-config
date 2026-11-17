@@ -59,3 +59,32 @@ run `org-agenda`, and use `emacsclient -c` to inspect the dashboard. For WSLg,
 adopt the shared feature in the separate work repository, then after a WSL
 restart run `org-capture t` from the WSL shell and inspect `systemctl --user
 status emacs` and `journalctl --user -u emacs.service -b` if it fails.
+
+## Learning templates and Pixi in Babel (add-learning-note-templates)
+
+Correction to the startup check above: until this change, its uv/Pixi Babel
+assertion matched the marker in the block's own source, so it passed without the
+block running. Plain `pixi` could not run there: Pixi's activation script calls
+`/usr/bin/env`, which the build sandbox lacks. The check now asserts the
+`#+RESULTS:` line and uses the FHS-wrapped `pixi` the profile ships. Both the uv
+and Pixi blocks are now shown to run. A mutation (marker in the source, no
+output) makes the check fail.
+
+Sandbox checks (`doom-startup`, `doom-contract`, `pre-commit-check`, stable and
+unstable builds, `kitsune-config`) cover: capture-key uniqueness (it failed on
+the previous config, which had `p` and `a` duplicated), the identity of every
+key's template, the learning templates' filenames, tags and bodies read at
+capture time, and an error when a template file is missing. They also run a
+Babel block in an installed dependency-free Pixi workspace via
+`pixi run --as-is`, and check that an uninstalled workspace fails without
+installing anything.
+
+Host check, work WSL, 2026-11-17: the work configuration built with
+`--override-input personal-features path:<this worktree>`, with its lock file
+unchanged, and was switched to. In Emacs, `(executable-find "pixi")` returned
+`/home/kit/.nix-profile/bin/pixi`. In a conda-forge workspace (`pixi init`,
+`pixi add python numpy`), a confirmed block with
+`:python "pixi run --as-is python"` and `:dir` set to the workspace printed
+`/tmp/em_test/.pixi/envs/default/bin/python 2.5.5`: the workspace's own
+interpreter and numpy. The learning capture keys were not exercised on the host,
+because the notes repository's template files do not exist yet.

@@ -8,6 +8,35 @@
 (defun kit/test-file-text (file)
   (with-temp-buffer (insert-file-contents file) (buffer-string)))
 
+;; Every Org-roam capture key must select exactly one template. Org's key selection takes the first
+;; match, so a duplicate silently shadows the later template.
+(defun kit/test-capture-key-problems (templates)
+  "Return descriptions of duplicate, shadowing or ungrouped keys in TEMPLATES."
+  (let ((keys (mapcar #'car templates))
+        (groups (mapcar #'car (seq-filter (lambda (entry) (= (length entry) 2)) templates)))
+        problems)
+    (let (seen)
+      (dolist (key keys)
+        (when (member key seen) (push (format "duplicate key %S" key) problems))
+        (push key seen)))
+    (dolist (entry templates)
+      (let ((key (car entry)))
+        (when (> (length entry) 2)
+          (dolist (other keys)
+            (when (and (not (equal other key)) (string-prefix-p key other))
+              (push (format "key %S shadows %S" key other) problems)))
+          (when (and (> (length key) 1) (not (member (substring key 0 -1) groups)))
+            (push (format "key %S has no group entry for %S" key (substring key 0 -1)) problems)))))
+    (delete-dups (nreverse problems))))
+
+(cl-assert (equal (kit/test-capture-key-problems '(("a" "One" plain "") ("a" "Two" plain "")))
+                  '("duplicate key \"a\"")))
+(cl-assert (equal (kit/test-capture-key-problems '(("l" "Group") ("lc" "Child" plain ""))) nil))
+(cl-assert (kit/test-capture-key-problems '(("lc" "Orphan" plain ""))))
+(let ((problems (kit/test-capture-key-problems org-roam-capture-templates)))
+  (when problems
+    (error "Org-roam capture keys are ambiguous: %s" (string-join problems "; "))))
+
 (let ((inbox (expand-file-name "inbox.org" org-directory))
       (other (expand-file-name "other-notes" (getenv "HOME"))))
   (write-region "Preserve this existing note\n" nil inbox nil 'silent)
@@ -31,7 +60,8 @@
 (kit/test-capture "i" "Inbox smoke")
 (kit/test-capture "t" "Task smoke")
 (kit/test-capture "m" "Meeting smoke")
-(let ((concept-file (kit/test-capture "c" "Concept smoke"))
+;; Two durable nodes and a link between them; concept capture lives in the learning templates.
+(let ((concept-file (kit/test-capture "e" "Concept smoke"))
       (investigation-file (kit/test-capture "e" "Investigation smoke")))
   (org-roam-db-sync)
   (let* ((concept (org-roam-node-from-title-or-alias "Concept smoke"))

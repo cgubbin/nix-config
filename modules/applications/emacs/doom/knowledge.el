@@ -182,9 +182,6 @@ Linked worktrees share the common Git directory and therefore one task file."
           ("t" "TODO task" entry
            (file+headline ,(expand-file-name "agenda/tasks.org" org-directory) "Tasks")
            "* TODO %?\n%U\n%i\n")
-          ("c" "Scientific concept" plain (file kit/org-new-node-file)
-           ":PROPERTIES:\n:ID: %(org-id-new)\n:END:\n#+title: %?\n#+filetags: :concept:\n\n* Idea\n\n* References\n"
-           :unnarrowed t)
           ("e" "Engineering investigation" plain (file kit/org-new-node-file)
            ":PROPERTIES:\n:ID: %(org-id-new)\n:END:\n#+title: %?\n#+filetags: :investigation:\n\n* Question\n\n* Evidence\n\n* Next steps\n"
            :unnarrowed t)
@@ -226,10 +223,7 @@ Linked worktrees share the common Git directory and therefore one task file."
            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                               "#+title: ${title}\n")
            :unnarrowed t)
-          ("c" "Scientific concept" plain "* Idea\n%?\n\n* References\n"
-           :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                              "#+title: ${title}\n#+filetags: :concept:\n")
-           :unnarrowed t)
+          ;; Concept notes come from the learning templates ("lc", learning.el).
           ("e" "Engineering investigation" plain "* Question\n%?\n\n* Evidence\n\n* Next steps\n"
            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                               "#+title: ${title}\n#+filetags: :investigation:\n")

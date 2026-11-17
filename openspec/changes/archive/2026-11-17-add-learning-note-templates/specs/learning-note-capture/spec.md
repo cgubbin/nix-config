@@ -1,0 +1,58 @@
+# Spec Delta
+
+## Purpose
+
+Lets the owner capture the subject notes of the learning system (concept, paper, algorithm, map
+of content, architecture) in one step, with the filename and tags that system defines and a body
+taken from the notes repository, and keeps every org-roam capture template reachable by its key.
+
+## ADDED Requirements
+
+### Requirement: Learning templates
+The environment SHALL offer org-roam capture templates for concept, paper, algorithm, map-of-content
+and architecture notes, grouped under one key prefix and labelled as learning notes.
+
+#### Scenario: Choosing a learning template
+- **WHEN** the user starts an org-roam capture and presses the learning prefix key
+- **THEN** the five learning templates are offered, each with its own key
+
+### Requirement: Filename and tag carry the type
+Each learning template SHALL create `<timestamp>-<type>-<slug>.org` in the org-roam directory,
+where `<type>` is `concept`, `paper`, `algorithm`, `moc` or `arch`, and SHALL set the same type as
+a filetag.
+
+#### Scenario: Capturing a concept
+- **WHEN** the user captures a concept note titled "Effective index"
+- **THEN** the file is named `<timestamp>-concept-effective-index.org` in the org-roam directory, and its filetags include `concept`
+
+### Requirement: Bodies come from the notes repository
+Each learning template's body SHALL be read at capture time from `templates/<type>.org` under the
+configured org directory, so that a body can change without rebuilding the environment.
+
+#### Scenario: Body edited in the notes repository
+- **WHEN** the owner edits `templates/concept.org` in the org directory and then captures a concept note
+- **THEN** the new note's body is the edited template, with no rebuild or restart
+
+#### Scenario: Template file missing
+- **WHEN** `templates/paper.org` does not exist in the org directory and the user captures a paper note
+- **THEN** the capture fails with an error naming the missing file, and no note is created
+
+### Requirement: One template per note type
+For each of the tags `concept`, `paper` and `algorithm`, exactly one org-roam capture template
+SHALL set it, namely the learning template for that type.
+
+#### Scenario: Tag means learning note
+- **WHEN** any note tagged `concept` is created through org-roam capture
+- **THEN** it was made by the learning concept template
+
+### Requirement: Capture keys are unique
+Every org-roam capture template, including the existing knowledge, process and scientific
+templates, SHALL be reachable by a key or key sequence that no other template uses.
+
+#### Scenario: Selecting the ADR template
+- **WHEN** the user selects the template on key `a`
+- **THEN** the created note uses the ADR layout and filetag (`adr`), and no other template is bound to `a`
+
+#### Scenario: Duplicate key added later
+- **WHEN** a template is added with a key that another template already uses
+- **THEN** the configuration test fails and names the key

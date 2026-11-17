@@ -62,6 +62,13 @@
             "project-todo"
             "project-agenda"
           ];
+      # Conda-forge binaries that pixi installs expect a standard Linux filesystem; the FHS wrapper
+      # provides it on NixOS. Babel blocks run `pixi run --as-is python` from Emacs (learning notes).
+      pixi = pkgs.buildFHSEnv {
+        name = "pixi";
+        runScript = "pixi";
+        targetPkgs = p: [ p.pixi ];
+      };
       doomDir = pkgs.runCommand "doom-config" { } ''
         mkdir -p "$out"
         cp ${./doom}/* "$out/"
@@ -121,6 +128,7 @@
             pkgs.biber
             pkgs.librsvg
             pkgs.zathura
+            pixi
             tex
           ];
         };
@@ -150,7 +158,7 @@
             TimeoutStartSec = 60;
           };
         };
-        home.packages = lib.optionals cfg.enableDaemon (commands ++ [ orgOpenPdf ]);
+        home.packages = [ pixi ] ++ lib.optionals cfg.enableDaemon (commands ++ [ orgOpenPdf ]);
         wayland.windowManager.hyprland.settings.bind =
           lib.mkIf
             (cfg.enableDaemon && cfg.enableGraphicalIntegration && config.wayland.windowManager.hyprland.enable)

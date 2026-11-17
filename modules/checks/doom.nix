@@ -67,6 +67,8 @@ in
             "org-project-capture"
           ])
         ) stable.config.home.packages;
+        # pixi is installed for Babel even without the daemon (stable disables it).
+        assert lib.any (p: lib.getName p == "pixi") stable.config.home.packages;
         assert !stable.options.knowledge.orgDirectory.type.check "relative/notes";
         assert !stable.options.knowledge.orgDirectory.type.check "/nix/store/notes";
         assert !(unselected.config.services.emacs.enable or false);
@@ -83,7 +85,10 @@ in
               pkgs.python3
               pkgs.util-linux
               pkgs.uv
-              pkgs.pixi
+              # The FHS-wrapped pixi the profile ships: plain pixi's activation script needs
+              # /usr/bin/env, which the build sandbox lacks.
+              (lib.findFirst (p: lib.getName p == "pixi") (throw "smoke profile has no pixi")
+                smoke.config.home.packages)
             ];
           }
           ''
