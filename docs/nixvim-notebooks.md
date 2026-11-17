@@ -71,11 +71,14 @@ start and stop Quarto's live preview.
 ## Plots and images
 
 Molten sends images to image.nvim, which draws them with the consumer's
-`sharedEditor.imageBackend`; plots appear under their cell.
+`sharedEditor.imageBackend`.
 
 - **Windows Terminal 1.22 or later** (including inside Zellij): `"sixel"`.
+  Plots open in the output window (`o` in the menu). Under the cell they were
+  redrawn on every tick and flickered, and the output window is stable.
   Verified with Windows Terminal 1.25 and Zellij 0.45.1.
-- **Kitty-protocol terminals** (Kitty, WezTerm without a multiplexer): `"kitty"`.
+- **Kitty-protocol terminals** (Kitty, WezTerm without a multiplexer):
+  `"kitty"`; plots also appear under their cell.
 - Images hide when scrolled off-screen or when windows overlap and return
   afterwards. In Zellij floating panes large images can escape the pane, so use
   normal panes for notebooks.
