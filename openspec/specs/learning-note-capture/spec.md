@@ -37,6 +37,19 @@ configured org directory, so that a body can change without rebuilding the envir
 - **WHEN** `templates/paper.org` does not exist in the org directory and the user captures a paper note
 - **THEN** the capture fails with an error naming the missing file, and no note is created
 
+### Requirement: Template properties are file-level
+When a learning template file starts with a property drawer, its properties SHALL be placed in the
+new note's file-level property drawer, alongside its ID, and SHALL NOT be repeated in the body.
+Other captures SHALL NOT receive them.
+
+#### Scenario: Paper reference from the template
+- **WHEN** `templates/paper.org` starts with a drawer setting `:ROAM_REFS: @key` and `:STATUS: stub`, and the user captures a paper note
+- **THEN** Org-roam finds the note by the reference `key`, its `STATUS` property is `stub`, and the file has one property drawer, at its top
+
+#### Scenario: Next capture is unaffected
+- **WHEN** a note is captured with a non-learning template after a learning capture
+- **THEN** it has none of the learning template's properties
+
 ### Requirement: One template per note type
 For each of the tags `concept`, `paper` and `algorithm`, exactly one org-roam capture template
 SHALL set it, namely the learning template for that type.

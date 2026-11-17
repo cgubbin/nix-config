@@ -59,6 +59,31 @@
   (org-roam-db-sync)
   (cl-assert (null (org-roam-node-from-title-or-alias "Learning paper missing"))))
 
+;; A template's leading property drawer becomes the note's file-level drawer, beside :ID:, so
+;; Org-roam reads it (e.g. ROAM_REFS); it is not repeated in the body.
+(cl-assert (equal (kit/learning-split-drawer ":PROPERTIES:\n:STATUS: stub\n:PREREQ:\n:END:\n* Body\n")
+                  '((("STATUS" . "stub") ("PREREQ" . "")) . "* Body\n")))
+(cl-assert (equal (kit/learning-split-drawer "* Body\n") '(nil . "* Body\n")))
+(kit/test-learning-write-fixture
+ "paper" ":PROPERTIES:\n:STATUS: stub\n:ROAM_REFS: @fixturekey2026\n:CITEKEY:\n:END:\n* Summary (mine)\n")
+(let* ((file (kit/test-learning-capture "lp" "Learning paper with properties"))
+       (text (kit/test-file-text file)))
+  (org-roam-db-sync)
+  (let ((node (org-roam-node-from-title-or-alias "Learning paper with properties")))
+    (cl-assert node)
+    (cl-assert (member "fixturekey2026" (org-roam-node-refs node)) nil
+               "ROAM_REFS not read from the file-level drawer: %S\n%s" (org-roam-node-refs node) text)
+    (cl-assert (equal (cdr (assoc "STATUS" (org-roam-node-properties node))) "stub") nil
+               "STATUS is not a file-level property:\n%s" text))
+  (cl-assert (= 1 (1- (length (split-string text "^:PROPERTIES:")))) nil "Expected one drawer:\n%s" text)
+  (cl-assert (string-match-p "\\`:PROPERTIES:\n\\(?::[A-Z_]+:.*\n\\)*:END:\n#\\+title: " text) nil
+             "Drawer is not at the top of the file:\n%s" text)
+  (cl-assert (string-match-p "^:CITEKEY:" text))
+  (cl-assert (string-match-p "^\\* Summary (mine)" text)))
+;; The next capture, from a non-learning template, gets none of those properties.
+(let ((text (kit/test-file-text (kit/test-learning-capture "d" "Plain note after learning"))))
+  (cl-assert (not (string-match-p ":STATUS:" text)) nil "Properties leaked into a plain note:\n%s" text))
+
 ;; Template identity: each key selects the template it is documented for, judged by the note's
 ;; filetags. A shadowed template, or a template not listed here, fails.
 (defconst kit/test-capture-key-tags

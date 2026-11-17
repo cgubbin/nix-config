@@ -182,7 +182,10 @@ mastery gate, are captured from the `l` group of Org-roam's capture menu:
 Emacs sets each note's key, filename, title and filetag. The body is read at
 capture time from `templates/<type>.org` under the Org root, so a layout changes
 by editing that file in the notes repository, with no rebuild. If the file is
-missing, the capture stops with an error naming it and no note is created. The
+missing, the capture stops with an error naming it and no note is created. If the
+file starts with a `:PROPERTIES:` drawer (for example `:STATUS: stub` or
+`:ROAM_REFS:`), those properties go into the note's top drawer beside `:ID:`,
+where Org-roam reads them; the rest of the file becomes the body. The
 layouts themselves (stub questions, gate, review log) are documented in the
 notes repository.
 

@@ -88,3 +88,14 @@ unchanged, and was switched to. In Emacs, `(executable-find "pixi")` returned
 `/tmp/em_test/.pixi/envs/default/bin/python 2.5.5`: the workspace's own
 interpreter and numpy. The learning capture keys were not exercised on the host,
 because the notes repository's template files do not exist yet.
+
+Follow-up, 2026-11-17: a property drawer in a template body landed after
+`#+title`, which Org does not treat as file-level, so Org-roam read no
+`ROAM_REFS`. This was found by capturing into a scratch directory in the work
+Emacs. Neither a drawer in the body nor an org-capture `%(...)` expression can
+reach the note's top drawer: `%(...)` runs before the target buffer exists. The
+capture now moves a leading drawer into the note's top drawer through
+`org-roam-capture-new-node-hook`. `doom-startup` checks that the reference
+resolves, that `STATUS` is file-level with a single drawer, and that the next
+non-learning capture does not inherit the properties. A mutation without the
+hook fails on the reference.
