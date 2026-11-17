@@ -294,6 +294,47 @@ function M.commands()
     { desc = "Show the outputs saved in this .ipynb (starts the kernel if needed)" })
 end
 
+-- Opens the plot of the cell under the cursor in the system viewer (the
+-- browser, via wslpath on WSL). Molten only draws images in its output window
+-- while that window has focus, so this is the way to keep a plot visible next
+-- to the code. The image comes from Molten's own saved state (:MoltenSave).
+function M.view_plot(buf)
+  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
+  local kernels = attached(buf)
+  if #kernels == 0 then return vim.notify("No notebook kernel attached; run a cell first") end
+  local name = (vim.b[buf].kit_kernel or {}).name
+  if not contains(kernels, name) then name = kernels[1] end
+  local line = vim.api.nvim_win_get_cursor(0)[1] - 1 -- Molten spans are 0-based
+  local dir = M.dir .. "/plots"
+  vim.fn.mkdir(dir, "p")
+  local state = dir .. "/state-" .. buf .. ".json"
+  local ok, err = pcall(vim.api.nvim_buf_call, buf, function()
+    vim.cmd("MoltenSave " .. vim.fn.fnameescape(state) .. " " .. name)
+  end)
+  if not ok or vim.fn.filereadable(state) ~= 1 then
+    return vim.notify("Could not read the kernel's outputs: " .. tostring(err), vim.log.levels.ERROR)
+  end
+  local decoded_ok, saved = pcall(vim.json.decode, table.concat(vim.fn.readfile(state), "\n"))
+  if not decoded_ok or type(saved) ~= "table" then return vim.notify("Could not parse Molten's saved state", vim.log.levels.ERROR) end
+  -- The cell containing the cursor, else the nearest one above it.
+  local chosen
+  for _, cell in ipairs(saved.cells or {}) do
+    local first, last = cell.span.begin.lineno, cell.span["end"].lineno
+    if first <= line and line <= last then chosen = cell; break end
+    if last < line and (not chosen or last > chosen.span["end"].lineno) then chosen = cell end
+  end
+  local png
+  for _, chunk in ipairs((chosen or {}).chunks or {}) do
+    png = png or (type(chunk.data) == "table" and chunk.data["image/png"])
+  end
+  if not png then return vim.notify("No plot in this cell's output") end
+  local path = string.format("%s/plot-%s-%d.png", dir, tostring(chosen.execution_count or "x"), os.time())
+  local f = assert(io.open(path, "wb"))
+  f:write(vim.base64.decode((png:gsub("%s", ""))))
+  f:close()
+  return path, require("kit.render").open(path)
+end
+
 -- Loads the outputs saved in the buffer's .ipynb into its kernel.
 function M.load_outputs(buf)
   buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf

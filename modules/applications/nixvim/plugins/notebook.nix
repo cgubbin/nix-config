@@ -26,6 +26,16 @@ _: {
               +UpdateRemotePlugins +qa
             grep -q "MoltenInit" "$out"
           '';
+      # Opens a file with the desktop's handler. Windows programs launched from
+      # WSL (the browser behind xdg-open) cannot open Linux paths, so convert
+      # them first. Used for Molten's "open in browser".
+      openFile = pkgs.writeShellScript "kit-open" ''
+        target="$1"
+        if command -v wslpath >/dev/null 2>&1 && [ -e "$target" ]; then
+          target="$(wslpath -w "$target")"
+        fi
+        exec xdg-open "$target"
+      '';
     in
     {
       programs.nixvim = {
@@ -89,6 +99,7 @@ _: {
               # stable; other backends also show them under the cell.
               image_provider = "image.nvim";
               image_location = if config.sharedEditor.imageBackend == "sixel" then "float" else "both";
+              open_cmd = "${openFile}";
             };
           };
 
@@ -108,7 +119,10 @@ _: {
               max_width = 100;
               max_height = 24;
               max_width_window_percentage = 100;
-              max_height_window_percentage = 50;
+              # Relative to the window an image is drawn in. 50 halved plots in
+              # Molten's output window (61x24 requested, 38x15 drawn); max_height
+              # still caps every image at 24 rows.
+              max_height_window_percentage = 100;
               window_overlap_clear_enabled = true;
               window_overlap_clear_ft_ignore = [
                 "cmp_menu"
@@ -143,7 +157,7 @@ _: {
                   _h_: hide output  _d_: delete output _x_: browser
                   _i_: kernel       _k_: choose env   _I_: interrupt
                   _R_: restart      _e_: save outputs _L_: load saved
-                  ^^                ^^                _<esc>_/_q_: exit
+                  _v_: view plot    ^^                _<esc>_/_q_: exit
                 '';
 
                 heads =
@@ -207,6 +221,11 @@ _: {
                       "L"
                       { __raw = ''function() require("kit.kernel").load_outputs(0) end''; }
                       { desc = "load saved outputs"; }
+                    ]
+                    [
+                      "v"
+                      { __raw = ''function() require("kit.kernel").view_plot(0) end''; }
+                      { desc = "view plot"; }
                     ]
                   [
                     "<esc>"

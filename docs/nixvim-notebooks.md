@@ -59,7 +59,7 @@ A notebook's kernel is the project's interpreter, not Neovim's.
 | `r` | re-evaluate cell | `n` / `p` | next / previous cell |
 | `o` / `h` | open / hide output | `d` | delete cell output |
 | `x` | open output in browser | `e` | save outputs to the `.ipynb` |
-| `L` | load outputs saved in the `.ipynb` | | |
+| `L` | load outputs saved in the `.ipynb` | `v` | view the cell's plot in the browser |
 | `i` | start project kernel | `k` | choose kernel environment |
 | `I` | interrupt | `R` | restart kernel |
 
@@ -76,14 +76,18 @@ Molten sends images to image.nvim, which draws them with the consumer's
 - **Windows Terminal 1.22 or later** (including inside Zellij): `"sixel"`.
   Plots open in the output window (`o` in the menu). Under the cell they were
   redrawn on every tick and flickered, and the output window is stable.
-  Verified with Windows Terminal 1.25 and Zellij 0.45.1.
+  Molten draws the plot only while that window has focus and clears it when
+  you leave, so use `v` to keep a plot open next to the code: it opens the
+  cell's plot in the browser. Verified with Windows Terminal 1.25 and
+  Zellij 0.45.1.
 - **Kitty-protocol terminals** (Kitty, WezTerm without a multiplexer):
   `"kitty"`; plots also appear under their cell.
 - Images hide when scrolled off-screen or when windows overlap and return
   afterwards. In Zellij floating panes large images can escape the pane, so use
   normal panes for notebooks.
-- When images cannot be shown, `x` in the menu opens the output in the browser,
-  and `<leader>qr` renders the whole notebook.
+- When images cannot be shown, `v` opens the cell's plot and `x` its HTML
+  output in the browser (paths are converted for Windows on WSL), and
+  `<leader>qr` renders the whole notebook.
 
 ## Rendering
 

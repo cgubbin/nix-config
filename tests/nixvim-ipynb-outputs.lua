@@ -92,8 +92,30 @@ for _, name in ipairs(vim.fn.readdir(root)) do
   assert(not name:match("^copy%-of%-"), "export wrote a sibling file: " .. name)
 end
 
+-- `v`: the plot of the cell under the cursor opens in the system viewer.
+local ui_open, opened = vim.ui.open, nil
+vim.ui.open = function(target) opened = target; return {}, nil end
+vim.api.nvim_win_set_cursor(0, { find(cells_code[2][3]), 0 })
+local plot = kernel.view_plot(buf)
+vim.ui.open = ui_open
+assert(plot and opened, "view_plot did not open anything")
+local bytes = assert(io.open(plot, "rb")):read(8)
+assert(bytes == "\137PNG\r\n\26\n", "view_plot did not write a PNG: " .. vim.inspect(bytes))
+assert(plot:find(kernel.dir, 1, true) == 1, "plot written outside the run directory: " .. plot)
+-- A cell without a plot says so instead of opening something else.
+vim.api.nvim_win_set_cursor(0, { find(cells_code[1][1]), 0 })
+opened = nil
+vim.ui.open = function(target) opened = target; return {}, nil end
+kernel.view_plot(buf)
+vim.ui.open = ui_open
+assert(opened == nil, "a cell without a plot opened " .. tostring(opened))
+
 -- Reopen: saved outputs load on request (:NotebookLoadOutputs), without errors.
 pcall(vim.cmd, "MoltenDeinit")
+-- Molten finishes tearing down asynchronously; starting the next kernel while
+-- it is still deleting the old buffer's marks intermittently failed init.
+vim.wait(2000, function() return #vim.fn.MoltenRunningKernels(false) == 0 end, 100)
+vim.wait(500)
 vim.cmd("bwipeout!")
 local warnings = {}
 local notify = vim.notify
