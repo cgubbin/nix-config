@@ -68,6 +68,35 @@
          :noquery t
          :connection-type 'pipe))))
   (org-link-set-parameters "zathura" :follow #'kit/org-zathura-follow)
+  ;; Image links. A terminal frame cannot draw images, so they open in a Zellij pane of the
+  ;; client's session, drawn by org-view-image with the terminal's protocol (host.el sets
+  ;; `kit/org-image-viewer' and `kit/org-image-protocol'). Graphical frames visit the file.
+  (defconst kit/org-image-file-regexp "\\.\\(png\\|jpe?g\\|gif\\|svg\\|webp\\)\\'"
+    "File names that `kit/org-open-image' handles.")
+  (defun kit/org-open-image (file &optional _link)
+    "Open image FILE from an Org link: in Emacs on a graphical frame, else in a Zellij pane.
+The Zellij session and `zellij' itself come from the frame's client environment: the
+daemon has neither, and the client's own `zellij' matches its server's version."
+    (let ((image (expand-file-name file)))
+      (if (display-graphic-p)
+          (find-file image)
+        (let* ((environment (frame-parameter nil 'environment))
+               (session (getenv-internal "ZELLIJ_SESSION_NAME" environment))
+               (path (getenv-internal "PATH" environment))
+               (zellij (and session path
+                            (let ((exec-path (split-string path path-separator t)))
+                              (executable-find "zellij")))))
+          (unless zellij
+            (user-error "Cannot show image %s in this terminal frame (needs Zellij)" image))
+          (make-process
+           :name "org-view-image"
+           :buffer "*org-view-image*"
+           :command (list zellij "--session" session "action" "new-pane" "--close-on-exit"
+                          "--name" (file-name-nondirectory image) "--"
+                          kit/org-image-viewer kit/org-image-protocol image)
+           :noquery t
+           :connection-type 'pipe)))))
+  (add-to-list 'org-file-apps (cons kit/org-image-file-regexp #'kit/org-open-image))
   ;; Require explicit confirmation for interactive Babel execution. Exported
   ;; documents never execute blocks implicitly; users run chosen blocks first.
   (setq org-confirm-babel-evaluate t
@@ -75,7 +104,7 @@
   (map! :map org-mode-map :localleader
         :desc "Insert citation" "i c" #'org-cite-insert
         :desc "Toggle equation preview" "l p" #'org-latex-preview
-        :desc "Toggle inline images" "l i" #'org-toggle-inline-images
+        :desc "Preview links (graphical frames)" "l i" #'org-link-preview
         :desc "Start graphical Org-noter" "n" #'kit/org-noter-start-graphical))
 
 (after! oc

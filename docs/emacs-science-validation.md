@@ -99,3 +99,27 @@ capture now moves a leading drawer into the note's top drawer through
 resolves, that `STATUS` is file-level with a single drawer, and that the next
 non-learning capture does not inherit the properties. A mutation without the
 hook fails on the reference.
+
+## Viewing images from terminal Org (preview-org-images-in-terminal)
+
+Sandbox checks (`doom-startup`, `doom-contract`, `pre-commit-check`, stable and
+unstable builds):
+- `org-view-image` argument checks and its `chafa --format` call, using a mock
+  `chafa`.
+- The protocol from `sharedEditor.imageBackend`: sixel without the shared
+  editor, kitty when it is set to kitty.
+- The image entry is first in `org-file-apps`.
+- A terminal frame runs `zellij --session <client session> action new-pane
+  --close-on-exit` (not floating) with the client's own `zellij`.
+- Without Zellij, or without `zellij` on the client's PATH, the follow fails
+  with a `user-error` naming the image.
+- A graphical frame visits the file, and non-image links are unchanged.
+- `SPC m l i` runs `org-link-preview`.
+Removing the `org-file-apps` entry, or restoring the old binding, makes the
+check fail.
+
+Host check, work WSL, 2026-11-17: the work configuration was built with
+`--override-input personal-features path:<this worktree>` and switched to, and
+the daemon restarted. In `emacsclient -t` inside Zellij, `C-c C-o` on a PNG link
+opened a tiled pane showing the image in sixel, and Enter closed it. The
+outside-Zellij message was checked only in the sandbox, not on the host.

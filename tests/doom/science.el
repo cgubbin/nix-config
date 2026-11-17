@@ -64,6 +64,69 @@
           (kill-buffer (current-buffer))))
     (set-frame-parameter frame 'kit-org-pdf-launch-context old-context)))
 
+;; Image links: a terminal frame opens a tiled Zellij pane in the client's session, with the
+;; client's zellij and the configured protocol; without Zellij it fails naming the file; a
+;; graphical frame visits the file; other links are unaffected.
+(let* ((root (expand-file-name "image-link-test" (getenv "HOME")))
+       (bin (expand-file-name "client-bin" root))
+       (zellij (expand-file-name "zellij" bin))
+       (image (expand-file-name "a figure.png" root))
+       (text (expand-file-name "notes.txt" root))
+       (frame (selected-frame))
+       (old-environment (frame-parameter frame 'environment))
+       (open (lambda (file) (org-link-open-from-string (format "[[file:%s]]" file))))
+       (captured nil))
+  (make-directory bin t)
+  (with-temp-file zellij (insert "#!/bin/sh\n"))
+  (set-file-modes zellij #o755)
+  (with-temp-file image (insert "png"))
+  (with-temp-file text (insert "text"))
+  (cl-assert (equal (car org-file-apps) (cons kit/org-image-file-regexp #'kit/org-open-image)))
+  (cl-assert (member kit/org-image-protocol '("sixels" "kitty" "symbols")))
+  (unwind-protect
+      (cl-letf (((symbol-function 'make-process)
+                 (lambda (&rest arguments) (setq captured (plist-get arguments :command)) 'mock-process))
+                ((symbol-function 'display-graphic-p) (lambda (&rest _) nil)))
+        ;; The session comes from the frame's client, not the daemon's environment.
+        (set-frame-parameter frame 'environment (list "ZELLIJ_SESSION_NAME=dev" (concat "PATH=" bin)))
+        (let ((process-environment (cons "ZELLIJ_SESSION_NAME=daemon" process-environment)))
+          (funcall open image))
+        (cl-assert (equal captured
+                          (list zellij "--session" "dev" "action" "new-pane" "--close-on-exit"
+                                "--name" "a figure.png" "--"
+                                kit/org-image-viewer kit/org-image-protocol image))
+                   nil "Unexpected pane command: %S" captured)
+        (cl-assert (not (member "--floating" captured)))
+        (cl-assert (not (get-file-buffer image)))
+        ;; No Zellij session: a user-error naming the file, no process, no buffer.
+        (setq captured nil)
+        (set-frame-parameter frame 'environment (list (concat "PATH=" bin)))
+        (let ((message (condition-case err (progn (funcall open image) nil)
+                         (user-error (error-message-string err)))))
+          (cl-assert (and message (string-match-p (regexp-quote image) message)) nil
+                     "Expected a user-error naming %s, got %S" image message))
+        (cl-assert (null captured))
+        (cl-assert (not (get-file-buffer image)))
+        ;; Session but no zellij on the client's PATH: the same failure.
+        (set-frame-parameter frame 'environment (list "ZELLIJ_SESSION_NAME=dev" "PATH=/nonexistent"))
+        (cl-assert (condition-case nil (progn (funcall open image) nil) (user-error t)))
+        (cl-assert (null captured))
+        ;; A non-image link in a terminal frame opens in Emacs as before.
+        (set-frame-parameter frame 'environment (list "ZELLIJ_SESSION_NAME=dev" (concat "PATH=" bin)))
+        (funcall open text)
+        (cl-assert (null captured))
+        (cl-assert (get-file-buffer text))
+        (kill-buffer (get-file-buffer text))
+        ;; A graphical frame visits the image itself. Called directly: the sandbox has no window
+        ;; system, so the rest of Org's link path cannot run with a stubbed graphical frame.
+        (let (visited)
+          (cl-letf (((symbol-function 'display-graphic-p) (lambda (&rest _) t))
+                    ((symbol-function 'find-file) (lambda (file &rest _) (setq visited file))))
+            (kit/org-open-image image))
+          (cl-assert (equal visited image))
+          (cl-assert (null captured))))
+    (set-frame-parameter frame 'environment old-environment)))
+
 ;; Image capture is writable and produces a relocatable path beside its note.
 (let* ((directory (expand-file-name "note-assets-test" (getenv "HOME")))
        (note (expand-file-name "paper.org" directory))
@@ -288,4 +351,15 @@
   (cl-assert (not (seq-some (lambda (entry) (and (equal (car entry) key)
                                                  (string-match-p "concept\\|Algorithm\\|Paper" (cadr entry))))
                             org-roam-capture-templates))))
+
+;; SPC m l i previews links with Org's current command; the obsolete one is bound nowhere in
+;; this configuration.
+(with-temp-buffer
+  (org-mode)
+  (evil-normal-state)
+  (let ((binding (key-binding (kbd (concat doom-localleader-key " l i")))))
+    (cl-assert (eq binding #'org-link-preview) nil "SPC m l i runs %S" binding)))
+(dolist (file (directory-files doom-user-dir t "\\.el\\'"))
+  (cl-assert (not (string-match-p "org-toggle-inline-images" (kit/test-file-text file))) nil
+             "%s still refers to org-toggle-inline-images" file))
 t

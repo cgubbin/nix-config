@@ -264,13 +264,24 @@ also reachable by keyboard; the normal Doom leader bindings continue to work.
 
 Org uses Nix-managed TeX and dvisvgm for inline and display math previews. In an
 Org buffer use **SPC m l p** (`org-latex-preview`) to toggle the preview at
-point; clear and regenerate it after changing an equation. Use **SPC m l i**
-to toggle inline image previews. The shared profile also includes the compact
+point; clear and regenerate it after changing an equation. In a graphical
+frame, **SPC m l i** (`org-link-preview`) shows linked images inline. The shared profile also includes the compact
 LaTeX article, BibLaTeX/Biber, Latin Modern, `latexmk`, and `rsvg-convert`
 toolchain for PDF export. Keep figures and attached PDFs as writable files
 beside a note or in its attachments directory; use relative
 `[[file:figures/plot.svg]]` and `[[file:papers/paper.pdf]]` links so exports
 remain portable.
+
+A terminal frame cannot draw images, so `SPC m l i` shows nothing there.
+Instead, follow the image link (`C-c C-o`, or `RET` on it): a new tiled
+Zellij pane opens in the client's own session and shows the PNG, JPEG, GIF,
+SVG or WebP image with `org-view-image` (`chafa`). Press Enter in that pane to
+close it. The pane is tiled because sixel images are not drawn in Zellij
+floating panes. The protocol follows `sharedEditor.imageBackend` (sixel, kitty,
+or character art for `ueberzug`); without the shared editor it is sixel. A
+terminal client outside Zellij, or one whose `PATH` has no `zellij`, gets a
+message naming the image instead of the file's bytes. Graphical frames and
+links to other files behave as before.
 
 Citar uses `bibliography/references.bib` under each host's Org root and looks
 for local papers in `bibliography/papers/`. Existing bibliography data is not

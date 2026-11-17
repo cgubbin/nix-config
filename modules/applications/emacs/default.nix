@@ -18,6 +18,25 @@
         ];
         text = builtins.readFile ./scripts/org-open-pdf.sh;
       };
+      # Shows an image in a terminal pane; Org opens it in Zellij from terminal frames.
+      orgViewImage = pkgs.writeShellApplication {
+        name = "org-view-image";
+        runtimeInputs = [
+          pkgs.chafa
+          pkgs.coreutils
+        ];
+        text = builtins.readFile ./scripts/org-view-image.sh;
+      };
+      # The terminal's image protocol, shared with image.nvim when the consumer imports
+      # shared-editor; sixel otherwise. A terminal pane cannot use ueberzug, so it gets
+      # character art.
+      imageProtocol =
+        {
+          sixel = "sixels";
+          kitty = "kitty";
+          ueberzug = "symbols";
+        }
+        .${lib.attrByPath [ "sharedEditor" "imageBackend" ] "sixel" config};
       tex = pkgs.texlive.withPackages (p: [
         p.scheme-basic
         p.latex
@@ -74,6 +93,8 @@
         cp ${./doom}/* "$out/"
         cat > "$out/host.el" <<'EOF'
         (setq org-directory ${builtins.toJSON cfg.orgDirectory})
+        (setq kit/org-image-viewer ${builtins.toJSON "${orgViewImage}/bin/org-view-image"}
+              kit/org-image-protocol ${builtins.toJSON imageProtocol})
         EOF
       '';
     in

@@ -27,6 +27,16 @@ let
   smoke = stable.extendModules {
     modules = [ { knowledge.orgDirectory = lib.mkForce "/build/home/notes"; } ];
   };
+  # A consumer whose shared editor uses the Kitty protocol; the stable fixture has no shared-editor.
+  kittyImages = stable.extendModules {
+    modules = [
+      {
+        options.sharedEditor.imageBackend = lib.mkOption { type = lib.types.str; };
+        config.sharedEditor.imageBackend = "kitty";
+      }
+    ];
+  };
+  hostEl = consumer: consumer.config.programs.doom-emacs.doomDir.buildCommand;
   unselected = inputs.home-manager.lib.homeManagerConfiguration {
     pkgs = import inputs.nixpkgs { system = "x86_64-linux"; };
     modules = [
@@ -69,6 +79,10 @@ in
         ) stable.config.home.packages;
         # pixi is installed for Babel even without the daemon (stable disables it).
         assert lib.any (p: lib.getName p == "pixi") stable.config.home.packages;
+        # Image protocol for terminal Org: sixel without shared-editor, else its imageBackend.
+        assert lib.hasInfix ''kit/org-image-protocol "sixels"'' (hostEl stable);
+        assert lib.hasInfix ''kit/org-image-protocol "kitty"'' (hostEl kittyImages);
+        assert lib.hasInfix "/bin/org-view-image" (hostEl stable);
         assert !stable.options.knowledge.orgDirectory.type.check "relative/notes";
         assert !stable.options.knowledge.orgDirectory.type.check "/nix/store/notes";
         assert !(unselected.config.services.emacs.enable or false);
@@ -104,6 +118,7 @@ in
             chmod 700 "$XDG_RUNTIME_DIR"
             bash ${../../tests/scripts/org-client-test.sh} ${../../modules/applications/emacs/scripts/org-client.sh}
             bash ${../../tests/scripts/org-open-pdf-test.sh} ${../../modules/applications/emacs/scripts/org-open-pdf.sh}
+            bash ${../../tests/scripts/org-view-image-test.sh} ${../../modules/applications/emacs/scripts/org-view-image.sh}
             app=${smoke.config.programs.doom-emacs.finalEmacsPackage}/bin
             "$app/emacs" --fg-daemon="$XDG_RUNTIME_DIR/server" > daemon.log 2>&1 &
             daemon=$!
