@@ -362,4 +362,50 @@
 (dolist (file (directory-files doom-user-dir t "\\.el\\'"))
   (cl-assert (not (string-match-p "org-toggle-inline-images" (kit/test-file-text file))) nil
              "%s still refers to org-toggle-inline-images" file))
+
+;; PDF export of an ordinary note: no LaTeX headers, Greek typed in prose, maths and a citation.
+;; The maintained example above brings its own lmodern, so it cannot catch a default-header failure.
+(let* ((root (expand-file-name "plain-note-export" (getenv "HOME")))
+       (bib (expand-file-name "references.bib" root))
+       (export (lambda (name body)
+                 (let ((file (expand-file-name (concat name ".org") root)))
+                   (with-temp-file file (insert body))
+                   (with-current-buffer (find-file-noselect file)
+                     (prog1 (condition-case err (expand-file-name (org-latex-export-to-pdf) root)
+                              (error (list 'failed (error-message-string err))))
+                       (set-buffer-modified-p nil)
+                       (kill-buffer)))))))
+  (make-directory root t)
+  (with-temp-file bib
+    (insert "@article{plainkey,\n  author = {Doe, Jane},\n  title = {A plain fixture reference},\n"
+            "  journal = {Fixture Letters},\n  year = {2026},\n}\n"))
+  (let ((org-cite-global-bibliography (list bib)))
+    ;; 2.1: a PDF is produced, with the Greek letters and the resolved citation in it.
+    (let ((pdf (funcall export "plain"
+                        (concat "#+title: Plain note\n\n"
+                                "The permittivity ε and the susceptibility χ(ω) are related [cite:@plainkey].\n"
+                                "Inline \\(E = \\epsilon_0 \\epsilon E\\) and displayed:\n"
+                                "\\begin{equation}\n\\nabla \\cdot \\mathbf{D} = \\rho_f\n\\end{equation}\n\n"
+                                "#+print_bibliography:\n"))))
+      (cl-assert (and (stringp pdf) (file-exists-p pdf)) nil "Plain note did not export: %S" pdf)
+      (let ((text (with-temp-buffer
+                    (call-process "pdftotext" nil t nil (expand-file-name pdf root) "-")
+                    (buffer-string))))
+        (dolist (expected '("ε" "χ" "ω" "A plain fixture reference"))
+          (cl-assert (string-match-p (regexp-quote expected) text) nil
+                     "Exported PDF lacks %s:\n%s" expected text))))
+    ;; 2.3: a character outside the map is reported, not dropped silently: the PDF is produced
+    ;; (latexmk runs non-stop), Org warns about unsupported Unicode, and the log names the character.
+    (let* ((warned nil)
+           (result (cl-letf (((symbol-function 'display-warning)
+                              (lambda (_type message &rest _) (push message warned))))
+                     (funcall export "unmapped" "#+title: Unmapped\n\nThe operator ∇ in prose.\n"))))
+      (cl-assert (and (stringp result) (file-exists-p result)) nil "No PDF for the unmapped note: %S" result)
+      (cl-assert (seq-some (lambda (m) (string-match-p "produced with warnings.*∇ (U\\+2207)" m)) warned)
+                 nil "Org did not name the unsupported character: %S" warned))))
+
+;; 2.2: a LaTeX preview with kit-unicode loaded renders a fragment that contains Greek.
+(let ((image (expand-file-name "greek-preview.svg" (getenv "HOME"))))
+  (kit/test-render "\\(χ(ω) = ε - 1\\)" image '(:foreground "Black" :background "Transparent" :scale 1.0))
+  (cl-assert (file-exists-p image)))
 t

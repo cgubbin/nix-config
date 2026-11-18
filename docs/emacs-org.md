@@ -292,6 +292,16 @@ references on HTML or PDF export. LaTeX uses BibLaTeX with Biber; HTML uses
 Org's basic citation processor. Use `org-attach` when a note needs its own
 files.
 
+Any note exports to PDF with `C-c C-e l p`; it needs no `#+latex_header` lines.
+Exports and equation previews use Latin Modern by default, and Greek letters
+typed in prose (ε, χ, ω, …) are set as maths symbols by `kit-unicode.sty`, kept
+in the Doom config directory. Other Unicode characters in prose (∇, ×, ≈ and the
+like) cannot be set by pdflatex: the PDF is still produced without them, and
+Org warns "PDF file produced with warnings: unsupported character(s) ∇ (U+2207)".
+Write such symbols inside `\( … \)`, or add a `\newunicodechar` line to
+`kit-unicode.sty`. Sections that should not appear in a PDF, such as a review
+log, take the `:noexport:` tag.
+
 Opening or exporting a document does not execute source blocks. Explicit Babel
 execution asks for confirmation; review the code before answering. Python,
 shell and Emacs Lisp blocks are supported. Select an interpreter for a specific

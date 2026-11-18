@@ -15,8 +15,9 @@ LaTeX, AMS, graphics, ulem, dvips and dvisvgm components. The stable consumer's
 TeX environment has a 770 MiB transitive closure (`nix path-info -Sh`); this is
 not the incremental disk cost if dependencies are already present. Real inline
 and display SVG previews and regeneration passed in the isolated startup check.
-PDF export is not claimed: document classes and bibliography processors can
-require additional TeX packages.
+PDF export of notes that use the default header is covered (see "PDF export of
+ordinary notes" below). Other document classes and bibliography styles may need
+additional TeX packages.
 
 The startup check runs with an isolated HOME and Nix build sandbox. It verifies
 that opening and HTML export do not execute Python, shell or Emacs Lisp blocks;
@@ -123,3 +124,39 @@ Host check, work WSL, 2026-11-17: the work configuration was built with
 the daemon restarted. In `emacsclient -t` inside Zellij, `C-c C-o` on a PNG link
 opened a tiled pane showing the image in sixel, and Enter closed it. The
 outside-Zellij message was checked only in the sandbox, not on the host.
+
+## PDF export of ordinary notes (fix-org-pdf-export)
+
+Found 2026-11-18. A learning note with no LaTeX headers failed to export: Org's
+default T1 `fontenc` needs the EC fonts (`ecrm0800`), which the Nix TeX set
+lacks. The scientific example only exported because it loads `lmodern` itself.
+Unicode Greek in prose also stopped `pdflatex`. Separately, Org 9.8.12's
+`org-latex--collect-warnings` never reports a "Unicode character" error: it
+searches for the known warning from after the error line. As a result, an
+unsupported character was dropped from the PDF with only "PDF file produced."
+
+Now `lmodern` and `kit-unicode` (Greek letters as maths symbols, via
+`newunicodechar`) are in `org-latex-packages-alist`, and the Doom directory is
+on `TEXINPUTS`. Advice on `org-latex--collect-warnings` names unsupported
+characters in Org's warning.
+
+`doom-startup` covers:
+- a header-free note with maths, Greek in prose and a citation exports, and
+  `pdftotext` shows ε, χ, ω and the reference;
+- a Greek fragment previews;
+- an unmapped ∇ produces a PDF and a warning naming "∇ (U+2207)";
+- the scientific example still exports.
+Removing `lmodern` makes the header-free export fail, and removing the advice
+makes the warning disappear.
+
+`doom-session` (the NixOS VM test) fails on this branch, on `main` (335c129) and
+on 40bb0ed: the Emacs daemon exceeds its start timeout in the single-CPU VM.
+That predates this change and is not addressed here.
+
+Host check, work WSL, 2026-11-18: the work configuration was built with
+`--override-input personal-features path:<this worktree>` and switched to, and
+Emacs was restarted. "Maxwell's equations in media", a learning note with no
+LaTeX headers and Review and Gate tagged `:noexport:`, exported with
+`C-c C-e l p`. The PDF was written next to the note; the equations rendered,
+the references were listed, and the review sections were left out. The owner
+confirmed it looked right.
