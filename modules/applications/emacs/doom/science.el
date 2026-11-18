@@ -111,6 +111,36 @@ daemon has neither, and the client's own `zellij' matches its server's version."
   (require 'citar)
   (require 'citar-org))
 
+;; Ordinary notes export to PDF with Org's default header. Its T1 fontenc needs the EC fonts unless
+;; Latin Modern is loaded (the Nix TeX set has lm, not EC), and kit-unicode.sty, kept in this
+;; directory, turns Greek letters typed in prose into maths symbols. Exports (latexmk) and LaTeX
+;; previews both inherit TEXINPUTS; the trailing ":" keeps TeX's default search path.
+(after! ox-latex
+  (let ((here (file-name-as-directory (expand-file-name doom-user-dir))))
+    (unless (string-prefix-p here (or (getenv "TEXINPUTS") ""))
+      (setenv "TEXINPUTS" (concat here ":" (or (getenv "TEXINPUTS") "")))))
+  (dolist (package '(("" "lmodern" t) ("" "kit-unicode" t)))
+    (add-to-list 'org-latex-packages-alist package t))
+  ;; Org 9.8's `org-latex--collect-warnings' excuses a "Unicode character" error, then looks for its
+  ;; known warnings from after that line, so an unsupported character is dropped from the PDF with
+  ;; only "PDF file produced." (and the .log is deleted). Name such characters in the warning.
+  (defun kit/org-latex-name-unicode-errors (collect buffer)
+    "Call COLLECT on BUFFER and add any unsupported Unicode characters it did not report."
+    (let ((warnings (funcall collect buffer))
+          (found nil))
+      (with-current-buffer buffer
+        (save-excursion
+          (goto-char (point-min))
+          (while (re-search-forward
+                  "^! LaTeX Error: Unicode character \\(.\\) (\\(U\\+[0-9A-F]+\\))" nil t)
+            (cl-pushnew (format "%s (%s)" (match-string 1) (match-string 2)) found :test #'equal))))
+      (if (or (null found) (eq warnings 'error))
+          warnings
+        (string-join (delq nil (list warnings (concat "unsupported character(s) "
+                                                      (string-join (nreverse found) ", "))))
+                     " "))))
+  (advice-add 'org-latex--collect-warnings :around #'kit/org-latex-name-unicode-errors))
+
 ;; Concepts, algorithms and papers are captured with the learning templates (learning.el), so each
 ;; of those tags has one layout.
 (after! org-roam

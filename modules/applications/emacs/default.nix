@@ -51,6 +51,7 @@
         p.lm
         p.wrapfig
         p.capt-of
+        p.newunicodechar
       ]);
       commands =
         map
