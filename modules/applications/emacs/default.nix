@@ -88,6 +88,12 @@
         name = "pixi";
         runScript = "pixi";
         targetPkgs = p: [ p.pixi ];
+        # nixpkgs wraps pixi with `--set-default PIXI_TLS_ROOT_CERTS system`, which pixi 0.68
+        # rejects ("expected one of webpki, native, all"), so every `pixi run` failed. Default to
+        # the system's root certificates under the name pixi accepts; a caller's value still wins.
+        profile = ''
+          export PIXI_TLS_ROOT_CERTS="''${PIXI_TLS_ROOT_CERTS:-native}"
+        '';
       };
       doomDir = pkgs.runCommand "doom-config" { } ''
         mkdir -p "$out"
