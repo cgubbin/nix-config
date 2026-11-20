@@ -408,4 +408,18 @@
 (let ((image (expand-file-name "greek-preview.svg" (getenv "HOME"))))
   (kit/test-render "\\(χ(ω) = ε - 1\\)" image '(:foreground "Black" :background "Transparent" :scale 1.0))
   (cl-assert (file-exists-p image)))
+
+;; LaTeX in notes is coloured, so equations stay readable in terminal frames (no previews there).
+(cl-assert (equal org-highlight-latex-and-related '(native script entities)))
+(with-temp-buffer
+  (insert "* Note\nInline \\(\\nabla \\cdot \\mathbf{D} = \\rho_f\\) and displayed:\n"
+          "\\begin{equation}\n\\epsilon(\\omega) = 1 + \\chi(\\omega)\n\\end{equation}\n")
+  (org-mode)
+  (font-lock-ensure)
+  (dolist (target '("\\nabla" "\\begin{equation}" "\\chi"))
+    (goto-char (point-min))
+    (search-forward target)
+    (cl-assert (get-text-property (match-beginning 0) 'face) nil
+               "LaTeX %s has no face; org-highlight-latex-and-related is %S"
+               target org-highlight-latex-and-related)))
 t

@@ -14,7 +14,11 @@
           org-cite-activate-processor 'citar
           org-preview-latex-default-process 'dvisvgm
           org-startup-with-inline-images t
-          org-image-actual-width '(700)))
+          org-image-actual-width '(700)
+          ;; Colour LaTeX fragments and environments as LaTeX mode would, and mark sub/superscripts
+          ;; and entities. Terminal frames cannot preview equations, so this is how they read.
+          ;; (Doom sets the same only with the org module's +pretty flag, which changes more.)
+          org-highlight-latex-and-related '(native script entities)))
   (require 'org-download)
   (setq org-download-method 'directory
         org-download-heading-lvl nil
